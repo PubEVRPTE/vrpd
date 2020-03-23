@@ -17,7 +17,7 @@ public class Solution {
 		route_list = new ArrayList<Route>();
 	}
 	
-	//¼ÆËãroute_listµÄ×ÜÖØÁ¿ºÍ×Ü³É±¾,¼ì²éÊÇ·ñÏàµÈ
+	//è®¡ç®—route_listçš„æ€»é‡é‡å’Œæ€»æˆæœ¬,æ£€æŸ¥æ˜¯å¦ç›¸ç­‰
 	public boolean check() {
 		
 		return true;

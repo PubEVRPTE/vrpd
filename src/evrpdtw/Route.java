@@ -11,14 +11,14 @@ public class Route{
 	
 	public boolean depart;//whether depart;
 	
-	public ArrayList<Boolean> takeoff_land;
+	public ArrayList<Integer> droneNext; // 无人机的下一站; 没有则是-1
+	public ArrayList<Integer> dronePrev; // 无人机的上一站; 没有则是-1
 	public ArrayList<Integer> vehicleRoute;
-	public ArrayList<ArrayList<Integer>> droneRoute;
 	
 	public Route() {
-		takeoff_land = new ArrayList<Boolean>();
+		droneNext = new ArrayList<Integer>();
+		dronePrev = new ArrayList<Integer>();
 		vehicleRoute = new ArrayList<Integer>();
-		droneRoute = new ArrayList<ArrayList<Integer>>();
 	}
 	
 	public boolean check() {
