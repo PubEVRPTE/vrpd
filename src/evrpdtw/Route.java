@@ -11,13 +11,13 @@ public class Route{
 	
 	public boolean depart;//whether depart;
 	
-	public ArrayList<Integer> droneNext; // 无人机的下一站; 没有则是-1
-	public ArrayList<Integer> dronePrev; // 无人机的上一站; 没有则是-1
+	public Map<Integer, Integer> droneNext; // 无人机的下一站; 没有则是null
+	public Map<Integer, Integer> dronePrev; // 无人机的上一站; 没有则是null
 	public ArrayList<Integer> vehicleRoute;
 	
 	public Route() {
-		droneNext = new ArrayList<Integer>();
-		dronePrev = new ArrayList<Integer>();
+		droneNext = new HashMap<Integer, Integer>();
+		dronePrev = new HashMap<Integer, Integer>();
 		vehicleRoute = new ArrayList<Integer>();
 	}
 	

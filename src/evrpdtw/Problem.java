@@ -261,27 +261,27 @@ public class Problem {
 					} else { // 常规删除
 
 						// 处理该点出发的无人机
-						if (route.droneNext.get(find) != -1) {
+						if (route.droneNext.get(find) != null) {
 							// 无人机路径固定只有三个点，硬编码
 							int cursor = route.droneNext.get(find), prev = find;
-							route.droneNext.set(prev, -1);
-							route.dronePrev.set(cursor, -1);
+							route.droneNext.remove(prev);
+							route.dronePrev.remove(cursor);
 							prev = cursor;
 							cursor = route.droneNext.get(cursor);
-							route.droneNext.set(prev, -1);
-							route.dronePrev.set(cursor, -1);
+							route.droneNext.remove(prev);
+							route.dronePrev.remove(cursor);
 						}
 
 						// 处理该点接收的无人机
-						if (route.dronePrev.get(find) != -1) {
+						if (route.dronePrev.get(find) != null) {
 							// 无人机路径固定只有三个点，硬编码
 							int cursor = route.dronePrev.get(find), prev = find;
-							route.dronePrev.set(prev, -1);
-							route.droneNext.set(cursor, -1);
+							route.dronePrev.remove(prev);
+							route.droneNext.remove(cursor);
 							prev = cursor;
 							cursor = route.dronePrev.get(cursor);
-							route.dronePrev.set(prev, -1);
-							route.droneNext.set(cursor, -1);
+							route.dronePrev.remove(prev);
+							route.droneNext.remove(cursor);
 						}
 
 						route.droneNext.remove(find);
@@ -289,13 +289,13 @@ public class Problem {
 						route.vehicleRoute.remove(find);
 					}
 					found = true;
-				} else if (route.droneNext.get(toRemove) != -1) { // 该点由无人机配送
+				} else if (route.droneNext.get(toRemove) != null) { // 该点由无人机配送
 					int next = route.droneNext.get(toRemove);
 					int prev = route.dronePrev.get(toRemove);
-					route.droneNext.set(toRemove, -1);
-					route.droneNext.set(prev, -1);
-					route.dronePrev.set(toRemove, -1);
-					route.dronePrev.set(next, -1);
+					route.droneNext.remove(toRemove);
+					route.droneNext.remove(prev);
+					route.dronePrev.remove(toRemove);
+					route.dronePrev.remove(next);
 					found = true;
 				}
 
