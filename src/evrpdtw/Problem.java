@@ -84,7 +84,7 @@ public class Problem {
 		d_maxDistance = d_speed * d_serviceTime;
 
 		// chargeable_List = new ArrayList<ArrayList<ArrayList<Integer>>>();
-		sol = new Solution();
+		sol = new Solution(this);
 	}
 
 	public void prepare() {
@@ -251,12 +251,44 @@ public class Problem {
 	}
 
 	public ArrayList<Integer> destroy1(int beta) {
-		ArrayList<Integer> to_remove = new ArrayList<Integer>();
-		while (beta > 0) {
-			int k = random.nextInt(sol.size - 2) + 1;
-			beta--;
-		}
-		return to_remove;
+		ArrayList<Integer> remove_list = new ArrayList<Integer>();
+		// ArrayList<Boolean> removed = new ArrayList<Boolean>(c_n + 1);
+		// while (beta > 0) {
+		// 	int id = random.nextInt(c_n) + 1;
+		// 	while (removed.get(id)) {
+		// 		id = random.nextInt(c_n) + 1;
+		// 	}
+
+		// 	boolean found = false;
+		// 	// case 1: 该点由无人机配送
+		// 	if (sol.droneNext.get(id) != null && sol.dronePrev.get(id) != null)
+		// 	for (int i = 1; i <= c_n; i++) {
+		// 		if (sol.droneNext.get(i) == id) {
+		// 			found = true;
+		// 			int next = sol.droneNext.get(i);
+		// 			int prev = sol.dronePrev.get(i);
+		// 			sol.droneNext.remove(i);
+		// 			sol.droneNext.remove(prev);
+		// 			sol.dronePrev.remove(i);
+		// 			sol.dronePrev.remove(next);
+		// 			remove_list.add(id);
+		// 			beta--;
+		// 			break;
+		// 		}
+		// 	}
+		// 	if (found) {
+		// 		continue;
+		// 	}
+
+		// 	// case 2: 由卡车配送
+		// 	for (ArrayList<Integer> route: sol.vehicleRoute) {
+		// 		int 
+		// 		// 无人机到达
+
+		// 		// 无人机出发
+		// 	}
+		// }
+		return remove_list;
 	}
 
 	public void destroy2(int beta) {

@@ -16,12 +16,14 @@ public class Solution {
 	public ArrayList<ArrayList<Integer>> vehicleRoute; // 每条线路头尾都是0
 	public HashMap<Integer, Integer> droneNext; // 无人机的下一站; 没有则是null
 	public HashMap<Integer, Integer> dronePrev; // 无人机的上一站; 没有则是null
+	public ArrayList<Integer> belongTo; // 存储每个点分别属于哪条路径, 避免逐路径寻找点; 在Problem中手动维护
 	
 	
-	public Solution() {
+	public Solution(Problem inst) {
 		vehicleRoute = new ArrayList<ArrayList<Integer>>();
 		droneNext = new HashMap<Integer, Integer>();
 		dronePrev = new HashMap<Integer, Integer>();
+		belongTo = new ArrayList<Integer>(inst.c_n + 1);
 	}
 
 	public void calculate_cost(Problem inst) {
