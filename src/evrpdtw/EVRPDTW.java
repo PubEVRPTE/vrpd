@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 public class EVRPDTW {
 
 	public static void main(String[] args) throws FileNotFoundException {
-		// TODO Auto-generated method stub
 		
 		String r_f_n = "RouteData.txt";
 		String p_f_n = "150.30.c.01.txt";

@@ -37,12 +37,14 @@ public class Problem {
 	public double v_time;
 	public double v_speed;
 	public int v_serviceTime;
+	public double v_maxDistance;
 	public double v_cost;
 
 	public double d_weight;
 	public double d_time;
 	public double d_speed;
 	public int d_serviceTime;
+	public double d_maxDistance;
 	public double d_cost;
 	public double launch_cost;// vehicle launch cost
 
@@ -77,6 +79,9 @@ public class Problem {
 		vec_poi = new ArrayList<poi>();
 		vec_poi_id = new ArrayList<Integer>();
 		vec_droneable_poi_id = new ArrayList<Integer>();
+
+		v_maxDistance = v_speed * v_serviceTime;
+		d_maxDistance = d_speed * d_serviceTime;
 
 		// chargeable_List = new ArrayList<ArrayList<ArrayList<Integer>>>();
 		sol = new Solution();
@@ -209,7 +214,14 @@ public class Problem {
 
 	public void solve() {
 		// 模拟退火
+		// 暂时不模拟退火了
+		int iter = 0;
 
+		while (iter < 1000) {
+			destroy();
+
+			iter++;
+		}
 	}
 
 	public void nearest_neighbor() {
@@ -226,86 +238,25 @@ public class Problem {
 	}
 
 	public void destroy() {
-		if (random.nextBoolean()) {
-			destroy1(getBeta());
-		} else {
-			destroy2(getBeta());
-		}
+		destroy1(getBeta());
+		// if (random.nextBoolean()) {
+		// 	destroy1(getBeta());
+		// } else {
+		// 	destroy2(getBeta());
+		// }
 	}
 
 	public int getBeta() {
 		return Math.max(Math.max(random.nextInt(c_low_ub) + c_low_lb, (int) Math.round(delta * c_n)), c_high);
 	}
 
-	public void destroy1(int beta) {
-		int removed = 0;
-		ArrayList<Boolean> removed_list = new ArrayList<Boolean>(c_n);
-
-		while (removed < beta) {
-			int toRemove = random.nextInt(c_n);
-			while (removed_list.get(toRemove)) {
-				toRemove = random.nextInt(c_n);
-			}
-
-			int route_id = 0;
-			Route route;
-			while (route_id < sol.route_list.size()) {
-				route = sol.route_list.get(route_id);
-				boolean found = false;
-				int find = route.vehicleRoute.indexOf(toRemove);
-				if (find != -1) { // 该点由车辆配送
-					if (route.vehicleRoute.size() == 1) { // 路径上只有这一个点，直接删除路径
-						// TODO: 更新solution的时间、距离等参数
-						sol.route_list.remove(route_id);
-						route = null;
-					} else { // 常规删除
-
-						// 处理该点出发的无人机
-						if (route.droneNext.get(find) != null) {
-							// 无人机路径固定只有三个点，硬编码
-							int cursor = route.droneNext.get(find), prev = find;
-							route.droneNext.remove(prev);
-							route.dronePrev.remove(cursor);
-							prev = cursor;
-							cursor = route.droneNext.get(cursor);
-							route.droneNext.remove(prev);
-							route.dronePrev.remove(cursor);
-						}
-
-						// 处理该点接收的无人机
-						if (route.dronePrev.get(find) != null) {
-							// 无人机路径固定只有三个点，硬编码
-							int cursor = route.dronePrev.get(find), prev = find;
-							route.dronePrev.remove(prev);
-							route.droneNext.remove(cursor);
-							prev = cursor;
-							cursor = route.dronePrev.get(cursor);
-							route.dronePrev.remove(prev);
-							route.droneNext.remove(cursor);
-						}
-
-						route.droneNext.remove(find);
-						route.dronePrev.remove(find);
-						route.vehicleRoute.remove(find);
-					}
-					found = true;
-				} else if (route.droneNext.get(toRemove) != null) { // 该点由无人机配送
-					int next = route.droneNext.get(toRemove);
-					int prev = route.dronePrev.get(toRemove);
-					route.droneNext.remove(toRemove);
-					route.droneNext.remove(prev);
-					route.dronePrev.remove(toRemove);
-					route.dronePrev.remove(next);
-					found = true;
-				}
-
-				if (found) {
-					removed++;
-					removed_list.set(toRemove, true);
-					break;
-				}
-			}
+	public ArrayList<Integer> destroy1(int beta) {
+		ArrayList<Integer> to_remove = new ArrayList<Integer>();
+		while (beta > 0) {
+			int k = random.nextInt(sol.size());
+			beta--;
 		}
+		return to_remove;
 	}
 
 	public void destroy2(int beta) {
