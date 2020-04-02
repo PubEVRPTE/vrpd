@@ -253,7 +253,7 @@ public class Problem {
 	public ArrayList<Integer> destroy1(int beta) {
 		ArrayList<Integer> to_remove = new ArrayList<Integer>();
 		while (beta > 0) {
-			int k = random.nextInt(sol.size());
+			int k = random.nextInt(sol.size - 2) + 1;
 			beta--;
 		}
 		return to_remove;

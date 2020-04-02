@@ -11,7 +11,7 @@ public class Solution {
 	//public double volume;
 	//public double distance;
 	public double t_cost;
-	public int _size;
+	public int size; // 解包含多少个点; 在Problem中手动维护
 
 	public ArrayList<ArrayList<Integer>> vehicleRoute; // 每条线路头尾都是0
 	public HashMap<Integer, Integer> droneNext; // 无人机的下一站; 没有则是null
@@ -102,10 +102,6 @@ public class Solution {
 				throw new RuntimeException("Invalid solution: Customers not visited.");
 			}
 		}
-	}
-
-	public int size() {
-		return _size;
 	}
 	
 	public String toString() {
