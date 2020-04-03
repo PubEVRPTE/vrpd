@@ -5,13 +5,10 @@ import java.util.*;
 public class Solution {
 
 	public double t_weight;
-	public double v_distance;
-	public double d_distance;
 	public double time;
 	//public double volume;
 	//public double distance;
 	public double t_cost;
-	public int size; // 解包含多少个点; 在Problem中手动维护
 
 	public ArrayList<ArrayList<Integer>> vehicleRoute; // 每条线路头尾都是0
 	public HashMap<Integer, Integer> droneNext; // 无人机的下一站; 没有则是null
@@ -26,7 +23,21 @@ public class Solution {
 		belongTo = new ArrayList<Integer>(inst.c_n + 1);
 	}
 
+	public Solution(Solution obj) {
+		vehicleRoute = new ArrayList<ArrayList<Integer>>(obj.vehicleRoute);
+		for (int i = 0; i < vehicleRoute.size(); i++) {
+			vehicleRoute.set(i, new ArrayList<Integer>(obj.vehicleRoute.get(i)));
+		}
+		droneNext = new HashMap<Integer, Integer>(obj.droneNext);
+		dronePrev = new HashMap<Integer, Integer>(obj.dronePrev);
+		belongTo = new ArrayList<Integer>(obj.belongTo);
+		t_weight = obj.t_weight;
+		time = obj.time;
+		t_cost = obj.t_cost;
+	}
+
 	public void calculate_cost(Problem inst) {
+		// TODO: t_weight, launch_time, launch_cost & recovery_time
 		t_cost = 0;
 		time = 0;
 		for (ArrayList<Integer> route: vehicleRoute) {
@@ -110,5 +121,4 @@ public class Solution {
 		
 		return "";
 	}
-	
 }

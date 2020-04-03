@@ -52,7 +52,7 @@ public class Problem {
 	public int r_t;// drone recovery time
 
 	public int c_n;// costumer point number
-	public int a_n;// all point number
+    public int a_n;// all point number
 
 	public ArrayList<poi> vec_poi;// cover depot
 	public ArrayList<Integer> vec_poi_id;// not cover depot
@@ -65,14 +65,17 @@ public class Problem {
 	public double[][] distance;
 	public int[][] infeasible_edge;// relate to charge
 
+	public Neighborhood neighborhood;
 	public Solution sol;
+	public Solution bestSolution;
 
-	// destroy方法中确定beta的参数
-	public static final int c_low_lb = 1;
-	public static final int c_low_ub = 3;
-	public static final int c_high = 40;
-	public static final double delta = 0.2;
 	public static final Random random = new Random();
+
+	// solve方法中的参数
+	public static final double timeLimit = 300;
+	public static final double maxTemperature = 3000;
+	public static final int maxNoImpv = 10;
+	public long timeStart;
 
 	public Problem() {
 
@@ -80,10 +83,11 @@ public class Problem {
 		vec_poi_id = new ArrayList<Integer>();
 		vec_droneable_poi_id = new ArrayList<Integer>();
 
-		v_maxDistance = v_speed * v_serviceTime;
-		d_maxDistance = d_speed * d_serviceTime;
+		v_maxDistance = v_speed * v_time;
+		d_maxDistance = d_speed * d_time;
 
 		// chargeable_List = new ArrayList<ArrayList<ArrayList<Integer>>>();
+		neighborhood = new Neighborhood(this);
 		sol = new Solution(this);
 	}
 
@@ -207,215 +211,55 @@ public class Problem {
 	}
 
 	public void initial() {
-		nearest_neighbor();
-		relocate();
-		drone_addition();
+		neighborhood.nearest_neighbor(sol);
+		neighborhood.relocate(sol);
+		neighborhood.drone_addition(sol);
+		bestSolution = new Solution(sol); // 深拷贝
 	}
 
 	public void solve() {
 		// 模拟退火
-		// 暂时不模拟退火了
+		timerOn();
 		int iter = 0;
+		int noImpv = 0;
 
-		while (iter < 1000) {
-			destroy();
+		while (timeout() == false) {
+			Solution newSolution = new Solution(sol);
+			ArrayList<Integer> to_insert = neighborhood.destroy(newSolution);
+			neighborhood.repair(newSolution, to_insert);
+
+			double temperature = maxTemperature * (time() / timeLimit);
+			if (random.nextDouble() < Math.exp((sol.t_cost - newSolution.t_cost) / temperature)) {
+				sol = newSolution;
+			}
+
+			if (sol.t_cost < bestSolution.t_cost) {
+				bestSolution = new Solution(sol); // 深拷贝
+				System.out.println("Iter " + iter + ": " + bestSolution.t_cost);
+				noImpv = 0;
+			} else {
+				noImpv++;
+				if (noImpv > maxNoImpv) {
+					sol = new Solution(bestSolution);
+					noImpv = 0;
+				}
+			}
+
+			// TODO: 自适应(写完四个repair再说)
 
 			iter++;
 		}
 	}
 
-	public void nearest_neighbor() {
-		// greedy
-
+	public void timerOn() {
+		timeStart = System.nanoTime();
 	}
 
-	public void relocate() {
-
+	public double time() {
+		return (double)(System.nanoTime() - timeStart) / 1e9;
 	}
 
-	public void drone_addition() {
-
-	}
-
-	public void destroy() {
-		if (random.nextBoolean()) {
-			destroy1(getBeta());
-		} else {
-			destroy2(getBeta());
-		}
-	}
-
-	public int getBeta() {
-		return Math.max(Math.max(random.nextInt(c_low_ub) + c_low_lb, (int) Math.round(delta * c_n)), c_high);
-	}
-
-	public ArrayList<Integer> destroy1(int beta) {
-		ArrayList<Integer> remove_list = new ArrayList<Integer>();
-		ArrayList<Boolean> removed = new ArrayList<Boolean>(c_n + 1);
-		while (beta > 0) {
-			int id = random.nextInt(c_n) + 1;
-			while (removed.get(id)) {
-				id = random.nextInt(c_n) + 1;
-			}
-
-			int routeId = sol.belongTo.get(id);
-			ArrayList<Integer> route = sol.vehicleRoute.get(routeId);
-
-			for (int i = 0; i < route.size(); i++) {
-				int current = route.get(i);
-				boolean found = false;
-				if (current == id) { // case 1: 由卡车配送
-					// 删掉接收的无人机
-					Integer drone = sol.dronePrev.get(id);
-					if (drone != null) {
-						int droneDepart = sol.dronePrev.get(drone);
-						sol.droneNext.remove(droneDepart);
-						sol.droneNext.remove(drone);
-						sol.dronePrev.remove(drone);
-						sol.dronePrev.remove(id);
-						sol.belongTo.remove(drone);
-						remove_list.add(drone);
-						removed.set(drone, true);
-						beta--;
-					}
-					// 删掉发送的无人机
-					drone = sol.droneNext.get(id);
-					if (drone != null) {
-						int droneLanding = sol.droneNext.get(drone);
-						sol.droneNext.remove(id);
-						sol.droneNext.remove(drone);
-						sol.dronePrev.remove(drone);
-						sol.dronePrev.remove(droneLanding);
-						sol.belongTo.remove(drone);
-						remove_list.add(drone);
-						removed.set(drone, true);
-						beta--;
-					}
-
-					route.remove(i);
-					sol.belongTo.remove(id);
-					remove_list.add(id);
-					removed.set(id, true);
-					beta--;
-					found = true;
-				} else if (sol.droneNext.get(current) == id) { // case 2: 由无人机配送
-					int droneLanding = sol.droneNext.get(id);
-					sol.droneNext.remove(current);
-					sol.droneNext.remove(id);
-					sol.dronePrev.remove(id);
-					sol.dronePrev.remove(droneLanding);
-					sol.belongTo.remove(id);
-					remove_list.add(id);
-					removed.set(id, true);
-					beta--;
-					found = true;
-				}
-				if (found) {
-					break;
-				}
-			}
-		}
-		return remove_list;
-	}
-
-	public ArrayList<Integer> destroy2(int beta) {
-		ArrayList<Integer> remove_list = new ArrayList<Integer>();
-		ArrayList<Boolean> removed = new ArrayList<Boolean>(c_n + 1);
-
-		int id = random.nextInt(c_n) + 1;
-		while (beta > 0) {
-			int routeId = sol.belongTo.get(id);
-			ArrayList<Integer> route = sol.vehicleRoute.get(routeId);
-
-			for (int i = 0; i < route.size(); i++) {
-				int current = route.get(i);
-				boolean found = false;
-				if (current == id) { // case 1: 由卡车配送
-					// 删掉接收的无人机
-					Integer drone = sol.dronePrev.get(id);
-					if (drone != null) {
-						int droneDepart = sol.dronePrev.get(drone);
-						sol.droneNext.remove(droneDepart);
-						sol.droneNext.remove(drone);
-						sol.dronePrev.remove(drone);
-						sol.dronePrev.remove(id);
-						sol.belongTo.remove(drone);
-						remove_list.add(drone);
-						removed.set(drone, true);
-						beta--;
-					}
-					// 删掉发送的无人机
-					drone = sol.droneNext.get(id);
-					if (drone != null) {
-						int droneLanding = sol.droneNext.get(drone);
-						sol.droneNext.remove(id);
-						sol.droneNext.remove(drone);
-						sol.dronePrev.remove(drone);
-						sol.dronePrev.remove(droneLanding);
-						sol.belongTo.remove(drone);
-						remove_list.add(drone);
-						removed.set(drone, true);
-						beta--;
-					}
-
-					route.remove(i);
-					sol.belongTo.remove(id);
-					remove_list.add(id);
-					removed.set(id, true);
-					beta--;
-					found = true;
-				} else if (sol.droneNext.get(current) == id) { // case 2: 由无人机配送
-					int droneLanding = sol.droneNext.get(id);
-					sol.droneNext.remove(current);
-					sol.droneNext.remove(id);
-					sol.dronePrev.remove(id);
-					sol.dronePrev.remove(droneLanding);
-					sol.belongTo.remove(id);
-					remove_list.add(id);
-					removed.set(id, true);
-					beta--;
-					found = true;
-				}
-				if (found) {
-					break;
-				}
-			}
-			// 找最近的两个点暂时直接搜索dist
-			// 可以事先按dist排个序，降低搜索时间
-			double mindist1 = Double.MAX_VALUE, mindist2 = Double.MAX_VALUE;
-			int minidx1 = -1, minidx2 = -1;
-			for (int i = 0; i < c_n; i++) {
-				if (removed.get(i)) {
-					continue;
-				}
-				if (distance[id][i] < mindist1) {
-					mindist2 = mindist1; minidx2 = minidx1;
-					mindist1 = distance[id][i]; minidx1 = i;
-				} else if (distance[id][i] < mindist2) {
-					mindist2 = distance[id][i]; minidx2 = i;
-				}
-			}
-			if (random.nextBoolean()) {
-				minidx1 = minidx2;
-			}
-			id = minidx1;
-		}
-		return remove_list;
-	}
-
-	public void repair1() {
-
-	}
-
-	public void repair2() {
-
-	}
-
-	public void repair3() {
-
-	}
-
-	public void repair4() {
-
+	public boolean timeout() {
+		return time() > timeLimit;
 	}
 }
