@@ -39,34 +39,7 @@ public class Solution {
 		t_cost = 0;
 		time = 0;
 		for (Route route: route_list) {
-			route.cost = 0;
-			route.weight = 0;
-			ArrayList<Double> cumulatedTime = new ArrayList<Double>(inst.c_n);
-			ArrayList<Integer> vehicleRoute = route.vehicleRoute;
-			int id = vehicleRoute.get(0);
-			int prevId;
-			for (int i = 1; i < vehicleRoute.size(); i++) {
-				prevId = id;
-				id = vehicleRoute.get(i);
-
-				Integer drone = route.dronePrev.get(id); // 接收无人机
-				double vehicleTime = 0;
-				double operationTime = 0;
-				if (drone != null) {
-					Integer droneDepart = route.dronePrev.get(drone);
-					double droneTime = (inst.distance[id][drone] + inst.distance[drone][droneDepart]) / inst.d_speed + inst.d_serviceTime + inst.l_t;
-					route.cost += inst.d_cost * droneTime;
-					operationTime = inst.r_t;
-					vehicleTime = inst.l_t;
-					cumulatedTime.set(id, cumulatedTime.get(droneDepart) + droneTime + operationTime);
-					route.weight += inst.vec_poi.get(drone).pack_weight;
-				}
-				vehicleTime += inst.distance[prevId][id] / inst.v_speed + inst.v_serviceTime;
-				route.cost += inst.v_cost * vehicleTime;
-				cumulatedTime.set(id, Math.max(cumulatedTime.get(prevId) + vehicleTime + operationTime, cumulatedTime.get(id)));
-				route.weight += inst.vec_poi.get(id).pack_weight;
-			}
-			route.time = cumulatedTime.get(0);
+			route.calculate_cost(inst);
 			t_cost += route.cost;
 			t_weight += route.weight;
 			time = Math.max(time, route.time);
@@ -99,7 +72,9 @@ public class Solution {
 					Integer droneLanding = route.droneNext.get(drone);
 					if (droneLanding == null) {
 						throw new RuntimeException("Invalid solution: Drone route broken - it never lands.");
-					} else if ((inst.distance[i][drone] + inst.distance[drone][droneLanding]) / inst.d_speed + inst.d_serviceTime + inst.l_t > inst.d_time) {
+					}
+					// TODO: 无人机现在是停在地上等卡车来的，要改正确
+					if ((inst.distance[i][drone] + inst.distance[drone][droneLanding]) / inst.d_speed + inst.d_serviceTime + inst.l_t > inst.d_time) {
 						throw new RuntimeException("Invalid solution: Drone departs for infeasible place.");
 					}
 					if (route.dronePrev.get(drone) != id || route.dronePrev.get(droneLanding) != drone) {
