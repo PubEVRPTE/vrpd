@@ -282,6 +282,35 @@ public class Neighborhood {
 
 	public void repair1(Solution sol, ArrayList<Integer> to_insert) {
 		// TODO
+			Solution copySol = new Solution(sol);
+			int free_c = to_insert.size();
+			// 随机插入卡车
+			while(free_c > 0){
+				int id = random.nextInt(free_c) + 1;
+				TruckRandomInsertion(id, copySol);
+				to_insert.remove(id);
+				free_c -= 1;
+			}
+			
+			// 部分改为无人机
+			ArrayList<poi> copyCus = new ArrayList<poi>(inst.vec_poi);
+			int c_n = copyCus.size();
+			while(c_n > 0){
+				int id = random.nextInt(c_n) + 1;
+				poi current = copyCus.get(id);
+				copyCus.remove(id);
+				int routeId = copySol.belongTo.get(id);
+				Route route = copySol.route_list.get(routeId);
+				Integer droneN = route.droneNext.get(id);
+				Integer droneP = route.dronePrev.get(id);
+				if(current.pack_weight < inst.d_weight && droneN == null && droneP == null){
+					double threshold = copySol.t_cost;
+					copySol.belongTo.remove(id);
+					copyCus.remove(id);
+					FindSortie(id, copySol, threshold);
+				}
+
+			}
 	}
 
 	public void repair2(Solution sol, ArrayList<Integer> to_insert) {
