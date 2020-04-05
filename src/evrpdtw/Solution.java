@@ -9,7 +9,7 @@ public class Solution {
 	public double time;
 	public double t_cost;
 	public ArrayList<Route> route_list;
-	public ArrayList<Integer> belongTo; // ´æ´¢Ã¿¸öµã·Ö±ğÊôÓÚÄÄÌõÂ·¾¶, ±ÜÃâÖğÂ·¾¶Ñ°ÕÒµã; ÔÚProblemÖĞÊÖ¶¯Î¬»¤
+	public ArrayList<Integer> belongTo; // å­˜å‚¨æ¯ä¸ªç‚¹åˆ†åˆ«å±äºå“ªæ¡è·¯å¾„, é¿å…é€è·¯å¾„å¯»æ‰¾ç‚¹; åœ¨Problemä¸­æ‰‹åŠ¨ç»´æŠ¤
 	
 	public Solution(Problem inst) {
 		this.inst = inst;
@@ -36,82 +36,101 @@ public class Solution {
 	}
 	
 	public void calculate_cost(Problem inst) {
-		// TODO: t_weight, launch_time, launch_cost & recovery_time
 		t_cost = 0;
 		time = 0;
-		for (ArrayList<Integer> route: vehicleRoute) {
+		for (Route route: route_list) {
+			route.cost = 0;
+			route.weight = 0;
 			ArrayList<Double> cumulatedTime = new ArrayList<Double>(inst.c_n);
-
-			int id = route.get(0);
+			ArrayList<Integer> vehicleRoute = route.vehicleRoute;
+			int id = vehicleRoute.get(0);
 			int prevId;
-			for (int i = 1; i < route.size(); i++) {
+			for (int i = 1; i < vehicleRoute.size(); i++) {
 				prevId = id;
-				id = route.get(i);
+				id = vehicleRoute.get(i);
 
-				Integer drone = dronePrev.get(id); // ½ÓÊÕÎŞÈË»ú
+				Integer drone = route.dronePrev.get(id); // æ¥æ”¶æ— äººæœº
+				double vehicleTime = 0;
+				double operationTime = 0;
 				if (drone != null) {
-					Integer droneDepart = dronePrev.get(drone);
-					double droneTime = (inst.distance[id][drone] + inst.distance[drone][droneDepart]) / inst.d_speed;
-					t_cost += inst.d_cost * droneTime;
-					cumulatedTime.set(id, cumulatedTime.get(droneDepart) + droneTime);
+					Integer droneDepart = route.dronePrev.get(drone);
+					double droneTime = (inst.distance[id][drone] + inst.distance[drone][droneDepart]) / inst.d_speed + inst.d_serviceTime + inst.l_t;
+					route.cost += inst.d_cost * droneTime;
+					operationTime = inst.r_t;
+					vehicleTime = inst.l_t;
+					cumulatedTime.set(id, cumulatedTime.get(droneDepart) + droneTime + operationTime);
+					route.weight += inst.vec_poi.get(drone).pack_weight;
 				}
-				double vehicleTime = inst.distance[prevId][id] / inst.v_speed;
-				t_cost += inst.v_cost * vehicleTime;
-				cumulatedTime.set(id, Math.max(cumulatedTime.get(prevId) + vehicleTime, cumulatedTime.get(id)));
+				vehicleTime += inst.distance[prevId][id] / inst.v_speed + inst.v_serviceTime;
+				route.cost += inst.v_cost * vehicleTime;
+				cumulatedTime.set(id, Math.max(cumulatedTime.get(prevId) + vehicleTime + operationTime, cumulatedTime.get(id)));
+				route.weight += inst.vec_poi.get(id).pack_weight;
 			}
-
-			time = Math.max(time, cumulatedTime.get(0));
+			route.time = cumulatedTime.get(0);
+			t_cost += route.cost;
+			t_weight += route.weight;
+			time = Math.max(time, route.time);
 		}
 	}
 	
-	// ¼ì²é½âÊÇ·ñÓĞĞ§
+	// æ£€æŸ¥è§£æ˜¯å¦æœ‰æ•ˆ
 	public void check(Problem inst) {
+		calculate_cost(inst);
 		ArrayList<Boolean> visited = new ArrayList<Boolean>(inst.c_n);
-		for (ArrayList<Integer> route: vehicleRoute) {
+		for (Route route: route_list) {
+			double totalWeight = 0;
+			ArrayList<Integer> vehicleRoute = route.vehicleRoute;
 			boolean droneAvailable = true;
-			double vehicleDistance = 0;
-			for (int i = 0; i < route.size(); i++) {
-				// ÎŞÈË»úÊÇ·ñºÏ·¨
-				Integer id = route.get(i);
-				if (dronePrev.get(id) != null) { // ½ÓÊÕÎŞÈË»ú
+			for (int i = 0; i < vehicleRoute.size(); i++) {
+				// æ— äººæœºæ˜¯å¦åˆæ³•
+				Integer id = vehicleRoute.get(i);
+				if (route.dronePrev.get(id) != null) { // æ¥æ”¶æ— äººæœº
 					if (droneAvailable == true) {
 						throw new RuntimeException("Invalid solution: Duplicate drone landing.");
 					}
 					droneAvailable = true;
 				}
-				// ·¢ËÍÎŞÈË»ú
-				Integer drone = droneNext.get(id);
+				// å‘é€æ— äººæœº
+				Integer drone = route.droneNext.get(id);
 				if (drone != null) {
 					if (droneAvailable == false) {
 						throw new RuntimeException("Invalid solution: Drone departs while there's actually no drone available.");
 					}
-					Integer droneLanding = droneNext.get(drone);
+					Integer droneLanding = route.droneNext.get(drone);
 					if (droneLanding == null) {
 						throw new RuntimeException("Invalid solution: Drone route broken - it never lands.");
-					} else if (inst.distance[i][drone] + inst.distance[drone][droneLanding] > inst.d_maxDistance) {
+					} else if ((inst.distance[i][drone] + inst.distance[drone][droneLanding]) / inst.d_speed + inst.d_serviceTime + inst.l_t > inst.d_time) {
 						throw new RuntimeException("Invalid solution: Drone departs for infeasible place.");
 					}
-					if (dronePrev.get(drone) != id || dronePrev.get(droneLanding) != drone) {
+					if (route.dronePrev.get(drone) != id || route.dronePrev.get(droneLanding) != drone) {
 						throw new RuntimeException("Invalid solution: Drone route does not consist.");
 					}
+					double weight = inst.vec_poi.get(drone).pack_weight;
+					if (weight > inst.d_weight) {
+						throw new RuntimeException("Invalid solution: Drone overweight.");
+					}
+					totalWeight += weight;
 					droneAvailable = false;
 					visited.set(drone, true);
 				}
-				if (i > 0) {
-					vehicleDistance += inst.distance[route.get(i-1)][i];
-				}
+				totalWeight += inst.vec_poi.get(id).pack_weight;
 				visited.set(id, true);
 			}
 			if (droneAvailable == false) {
 				throw new RuntimeException("Invalid solution: Vehicle returns without drone.");
 			}
-			if (vehicleDistance > inst.v_maxDistance) {
-				throw new RuntimeException("Invalid solution: Vehicle following a too-far route.");
+			if (totalWeight > inst.v_weight_drone) {
+				throw new RuntimeException("Invalid solution: Vehicle overweight");
 			}
 		}
 		for (boolean e : visited) {
 			if (e == false) {
-				throw new RuntimeException("Invalid solution: Customers not visited.");
+				throw new RuntimeException("Invalid solution: Customer(s) not visited.");
+			}
+		}
+		for (Route route: route_list) {
+			if (route.time > inst.v_time) {
+				throw new RuntimeException("Invalid solution: Vehicle following a too-far route.");
 			}
 		}
 	}

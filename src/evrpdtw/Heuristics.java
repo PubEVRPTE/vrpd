@@ -25,7 +25,7 @@ public class Heuristics {
 
 	public Problem inst;
 	
-	// solve·½·¨ÖĞµÄ²ÎÊı
+	// solveæ–¹æ³•ä¸­çš„å‚æ•°
 	public static final double timeLimit = 300;
 	public static final double maxTemperature = 3000;
 	public static final int maxNoImpv = 10;
@@ -56,7 +56,7 @@ public class Heuristics {
 	}
 	
 	public void solve() {
-		// Ä£ÄâÍË»ğ
+		// æ¨¡æ‹Ÿé€€ç«
 		initial();
 		
 		timerOn();
@@ -74,7 +74,7 @@ public class Heuristics {
 			}
 
 			if (sol.t_cost < bestSolution.t_cost) {
-				bestSolution = new Solution(sol); // Éî¿½±´
+				bestSolution = new Solution(sol); // æ·±æ‹·è´
 				System.out.println("Iter " + iter + ": " + bestSolution.t_cost);
 				noImpv = 0;
 			} else {
@@ -85,7 +85,7 @@ public class Heuristics {
 				}
 			}
 
-			// TODO: ×ÔÊÊÓ¦(Ğ´ÍêËÄ¸örepairÔÙËµ)
+			// TODO: è‡ªé€‚åº”(å†™å®Œå››ä¸ªrepairå†è¯´)
 
 			iter++;
 		}
@@ -124,7 +124,6 @@ public class Heuristics {
 				if (r.weight + add_weight <= inst.v_weight_drone && r.time + add_time <= inst.v_time) {
 					r.vehicleRoute.add(insert_index+1, nearnext_id);
 					r.weight += add_weight;
-					r.d_distance +=min_add_distance;
 					r.time += add_time;
 					r.cost += min_add_distance * inst.v_cost;
 					vec_poi_id.remove(nearnext_index);
@@ -154,7 +153,7 @@ public class Heuristics {
 			for (int i = 0; i < to_lookfor.size(); i++) {
 				if (to_lookfor.get(i) == c) {
 					to_lookfor.remove(i);
-					//update sol_x !!!
+					//TODO: update sol_x !!!
 					break;
 				}
 			}

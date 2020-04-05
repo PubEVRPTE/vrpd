@@ -4,7 +4,7 @@ import java.util.*;
 
 public class Neighborhood {
 
-	// destroy·½·¨ÖĞÈ·¶¨betaµÄ²ÎÊı
+	// destroyæ–¹æ³•ä¸­ç¡®å®šbetaçš„å‚æ•°
 		public static final int c_low_lb = 1;
 		public static final int c_low_ub = 3;
 		public static final int c_high = 40;
@@ -27,6 +27,7 @@ public class Neighborhood {
 
 		public void repair(Solution sol, ArrayList<Integer> to_insert) {
 			repair1(sol, to_insert);
+			sol.check(inst); // è°ƒè¯•æ£€æŸ¥æ­£ç¡®æ€§ç”¨ï¼Œæ²¡é—®é¢˜å°±æ³¨é‡Šæ‰
 		}
 
 		public int getBeta() {
@@ -43,51 +44,51 @@ public class Neighborhood {
 				}
 
 				int routeId = sol.belongTo.get(id);
-				ArrayList<Integer> route = sol.vehicleRoute.get(routeId);
+				Route route = sol.route_list.get(routeId);
 
-				for (int i = 0; i < route.size(); i++) {
-					int current = route.get(i);
+				for (int i = 0; i < route.vehicleRoute.size(); i++) {
+					int current = route.vehicleRoute.get(i);
 					boolean found = false;
-					if (current == id) { // case 1: ÓÉ¿¨³µÅäËÍ
-						// É¾µô½ÓÊÕµÄÎŞÈË»ú
-						Integer drone = sol.dronePrev.get(id);
+					if (current == id) { // case 1: ç”±å¡è½¦é…é€
+						// åˆ æ‰æ¥æ”¶çš„æ— äººæœº
+						Integer drone = route.dronePrev.get(id);
 						if (drone != null) {
-							int droneDepart = sol.dronePrev.get(drone);
-							sol.droneNext.remove(droneDepart);
-							sol.droneNext.remove(drone);
-							sol.dronePrev.remove(drone);
-							sol.dronePrev.remove(id);
+							int droneDepart = route.dronePrev.get(drone);
+							route.droneNext.remove(droneDepart);
+							route.droneNext.remove(drone);
+							route.dronePrev.remove(drone);
+							route.dronePrev.remove(id);
 							sol.belongTo.remove(drone);
 							remove_list.add(drone);
 							removed.set(drone, true);
 							beta--;
 						}
-						// É¾µô·¢ËÍµÄÎŞÈË»ú
-						drone = sol.droneNext.get(id);
+						// åˆ æ‰å‘é€çš„æ— äººæœº
+						drone = route.droneNext.get(id);
 						if (drone != null) {
-							int droneLanding = sol.droneNext.get(drone);
-							sol.droneNext.remove(id);
-							sol.droneNext.remove(drone);
-							sol.dronePrev.remove(drone);
-							sol.dronePrev.remove(droneLanding);
+							int droneLanding = route.droneNext.get(drone);
+							route.droneNext.remove(id);
+							route.droneNext.remove(drone);
+							route.dronePrev.remove(drone);
+							route.dronePrev.remove(droneLanding);
 							sol.belongTo.remove(drone);
 							remove_list.add(drone);
 							removed.set(drone, true);
 							beta--;
 						}
 
-						route.remove(i);
+						route.vehicleRoute.remove(i);
 						sol.belongTo.remove(id);
 						remove_list.add(id);
 						removed.set(id, true);
 						beta--;
 						found = true;
-					} else if (sol.droneNext.get(current) == id) { // case 2: ÓÉÎŞÈË»úÅäËÍ
-						int droneLanding = sol.droneNext.get(id);
-						sol.droneNext.remove(current);
-						sol.droneNext.remove(id);
-						sol.dronePrev.remove(id);
-						sol.dronePrev.remove(droneLanding);
+					} else if (route.droneNext.get(current) == id) { // case 2: ç”±æ— äººæœºé…é€
+						int droneLanding = route.droneNext.get(id);
+						route.droneNext.remove(current);
+						route.droneNext.remove(id);
+						route.dronePrev.remove(id);
+						route.dronePrev.remove(droneLanding);
 						sol.belongTo.remove(id);
 						remove_list.add(id);
 						removed.set(id, true);
@@ -109,51 +110,51 @@ public class Neighborhood {
 			int id = random.nextInt(inst.c_n) + 1;
 			while (beta > 0) {
 				int routeId = sol.belongTo.get(id);
-				ArrayList<Integer> route = sol.vehicleRoute.get(routeId);
+				Route route = sol.route_list.get(routeId);
 
-				for (int i = 0; i < route.size(); i++) {
-					int current = route.get(i);
+				for (int i = 0; i < route.vehicleRoute.size(); i++) {
+					int current = route.vehicleRoute.get(i);
 					boolean found = false;
-					if (current == id) { // case 1: ÓÉ¿¨³µÅäËÍ
-						// É¾µô½ÓÊÕµÄÎŞÈË»ú
-						Integer drone = sol.dronePrev.get(id);
+					if (current == id) { // case 1: ç”±å¡è½¦é…é€
+						// åˆ æ‰æ¥æ”¶çš„æ— äººæœº
+						Integer drone = route.dronePrev.get(id);
 						if (drone != null) {
-							int droneDepart = sol.dronePrev.get(drone);
-							sol.droneNext.remove(droneDepart);
-							sol.droneNext.remove(drone);
-							sol.dronePrev.remove(drone);
-							sol.dronePrev.remove(id);
+							int droneDepart = route.dronePrev.get(drone);
+							route.droneNext.remove(droneDepart);
+							route.droneNext.remove(drone);
+							route.dronePrev.remove(drone);
+							route.dronePrev.remove(id);
 							sol.belongTo.remove(drone);
 							remove_list.add(drone);
 							removed.set(drone, true);
 							beta--;
 						}
-						// É¾µô·¢ËÍµÄÎŞÈË»ú
-						drone = sol.droneNext.get(id);
+						// åˆ æ‰å‘é€çš„æ— äººæœº
+						drone = route.droneNext.get(id);
 						if (drone != null) {
-							int droneLanding = sol.droneNext.get(drone);
-							sol.droneNext.remove(id);
-							sol.droneNext.remove(drone);
-							sol.dronePrev.remove(drone);
-							sol.dronePrev.remove(droneLanding);
+							int droneLanding = route.droneNext.get(drone);
+							route.droneNext.remove(id);
+							route.droneNext.remove(drone);
+							route.dronePrev.remove(drone);
+							route.dronePrev.remove(droneLanding);
 							sol.belongTo.remove(drone);
 							remove_list.add(drone);
 							removed.set(drone, true);
 							beta--;
 						}
 
-						route.remove(i);
+						route.vehicleRoute.remove(i);
 						sol.belongTo.remove(id);
 						remove_list.add(id);
 						removed.set(id, true);
 						beta--;
 						found = true;
-					} else if (sol.droneNext.get(current) == id) { // case 2: ÓÉÎŞÈË»úÅäËÍ
-						int droneLanding = sol.droneNext.get(id);
-						sol.droneNext.remove(current);
-						sol.droneNext.remove(id);
-						sol.dronePrev.remove(id);
-						sol.dronePrev.remove(droneLanding);
+					} else if (route.droneNext.get(current) == id) { // case 2: ç”±æ— äººæœºé…é€
+						int droneLanding = route.droneNext.get(id);
+						route.droneNext.remove(current);
+						route.droneNext.remove(id);
+						route.dronePrev.remove(id);
+						route.dronePrev.remove(droneLanding);
 						sol.belongTo.remove(id);
 						remove_list.add(id);
 						removed.set(id, true);
@@ -164,8 +165,8 @@ public class Neighborhood {
 						break;
 					}
 				}
-				// ÕÒ×î½üµÄÁ½¸öµãÔİÊ±Ö±½ÓËÑË÷dist
-				// ¿ÉÒÔÊÂÏÈ°´distÅÅ¸öĞò£¬½µµÍËÑË÷Ê±¼ä
+				// æ‰¾æœ€è¿‘çš„ä¸¤ä¸ªç‚¹æš‚æ—¶ç›´æ¥æœç´¢dist
+				// å¯ä»¥äº‹å…ˆæŒ‰distæ’ä¸ªåºï¼Œé™ä½æœç´¢æ—¶é—´
 				double mindist1 = Double.MAX_VALUE, mindist2 = Double.MAX_VALUE;
 				int minidx1 = -1, minidx2 = -1;
 				for (int i = 0; i < inst.c_n; i++) {
@@ -187,10 +188,37 @@ public class Neighborhood {
 			return remove_list;
 		}
 
+		public Sortie FindSortie(int c, Solution s, double threshold) {
+			Sortie bestSortie = null;
+			
+			return bestSortie;
+		}
+		
+		public void TruckRandomInsertion(int c, Solution s) {
+			
+		}
+
+		//å¼±åŒ–ç‰ˆçš„FindSortie
+		public Sortie FindSortie_w(int c, Solution s, double threshold) { 
+			Sortie bestSortie = null;
+			
+			return bestSortie;
+		}
+		
+		public int NearestCustomer(int c, Solution s) {
+			int c_nearest = -1;
+			
+			return c_nearest;
+		}
+		
+		public boolean AttempBestInsertion(int c, Route r) {
+			boolean result = false;
+			
+			return result;
+		}
+
 		public void repair1(Solution sol, ArrayList<Integer> to_insert) {
 	        // TODO
-	        sol.check(inst);
-	        sol.calculate_cost(inst);
 		}
 
 		public void repair2(Solution sol, ArrayList<Integer> to_insert) {
