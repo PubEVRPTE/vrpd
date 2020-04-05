@@ -378,6 +378,25 @@ public class Neighborhood {
 	}
 
 	public void repair4(Solution sol, ArrayList<Integer> to_insert) {
-
+			ArrayList<poi> copyCus = new ArrayList<poi>(inst.vec_poi);
+			ArrayList<Integer> oversize = new ArrayList<>(); 
+			poi a = new poi();
+			int id = 0;
+			double w = 0;
+			// 去除超重的
+			for(int i = 0; i < copyCus.size(); i++){
+				a = copyCus.get(i);
+				w = a.pack_weight;
+				if(w > inst.d_weight){
+					oversize.add(a.id);
+					copyCus.remove(a);
+				}
+			}
+			Solution copySol = new Solution(sol);
+			for(int i = 0; i < oversize.size(); i++){
+				id = oversize.get(i);
+				TruckBestInsertion(id, copySol);
+			}
+			repair1(copySol, to_insert);
 	}
 }
