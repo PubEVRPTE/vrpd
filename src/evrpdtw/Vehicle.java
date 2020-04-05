@@ -1,6 +1,6 @@
 package evrpdtw;
 
-//绛夊悗闈㈠鏋滅爺绌跺杞﹀瀷鐨勬椂鍊欏彲浠ュ啀鐢ㄨ繖涓被
+//等后面如果研究多车型的时候可以再用这个类
 public class Vehicle {
 
 	public int id;

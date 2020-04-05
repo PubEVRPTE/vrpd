@@ -4,38 +4,37 @@ import java.util.*;
 
 public class Solution {
 
+	public Problem inst;
 	public double t_weight;
 	public double time;
-	//public double volume;
-	//public double distance;
 	public double t_cost;
-
-	public ArrayList<ArrayList<Integer>> vehicleRoute; // æ¯æ¡çº¿è·¯å¤´å°¾éƒ½æ˜¯0
-	public HashMap<Integer, Integer> droneNext; // æ— äººæœºçš„ä¸‹ä¸€ç«™; æ²¡æœ‰åˆ™æ˜¯null
-	public HashMap<Integer, Integer> dronePrev; // æ— äººæœºçš„ä¸Šä¸€ç«™; æ²¡æœ‰åˆ™æ˜¯null
-	public ArrayList<Integer> belongTo; // å­˜å‚¨æ¯ä¸ªç‚¹åˆ†åˆ«å±äºå“ªæ¡è·¯å¾„, é¿å…é€è·¯å¾„å¯»æ‰¾ç‚¹; åœ¨Problemä¸­æ‰‹åŠ¨ç»´æŠ¤
-	
+	public ArrayList<Route> route_list;
+	public ArrayList<Integer> belongTo; // ´æ´¢Ã¿¸öµã·Ö±ğÊôÓÚÄÄÌõÂ·¾¶, ±ÜÃâÖğÂ·¾¶Ñ°ÕÒµã; ÔÚProblemÖĞÊÖ¶¯Î¬»¤
 	
 	public Solution(Problem inst) {
-		vehicleRoute = new ArrayList<ArrayList<Integer>>();
-		droneNext = new HashMap<Integer, Integer>();
-		dronePrev = new HashMap<Integer, Integer>();
-		belongTo = new ArrayList<Integer>(inst.c_n + 1);
-	}
-
-	public Solution(Solution obj) {
-		vehicleRoute = new ArrayList<ArrayList<Integer>>(obj.vehicleRoute);
-		for (int i = 0; i < vehicleRoute.size(); i++) {
-			vehicleRoute.set(i, new ArrayList<Integer>(obj.vehicleRoute.get(i)));
+		this.inst = inst;
+		t_weight = 0;
+		time = 0;
+		t_cost = 0;
+		route_list = new ArrayList<Route>();
+		belongTo = new ArrayList<Integer>();
+		for (int i = 0; i < inst.c_n + 1; i++) {
+			belongTo.add(-1);
 		}
-		droneNext = new HashMap<Integer, Integer>(obj.droneNext);
-		dronePrev = new HashMap<Integer, Integer>(obj.dronePrev);
+	}
+	
+	public Solution(Solution obj) {
+		this.inst = obj.inst;
+		route_list = new ArrayList<Route>();
+		for (int i = 0; i < obj.route_list.size(); i++) {
+			route_list.add(new Route(obj.route_list.get(i)));
+		}
 		belongTo = new ArrayList<Integer>(obj.belongTo);
 		t_weight = obj.t_weight;
 		time = obj.time;
 		t_cost = obj.t_cost;
 	}
-
+	
 	public void calculate_cost(Problem inst) {
 		// TODO: t_weight, launch_time, launch_cost & recovery_time
 		t_cost = 0;
@@ -49,7 +48,7 @@ public class Solution {
 				prevId = id;
 				id = route.get(i);
 
-				Integer drone = dronePrev.get(id); // æ¥æ”¶æ— äººæœº
+				Integer drone = dronePrev.get(id); // ½ÓÊÕÎŞÈË»ú
 				if (drone != null) {
 					Integer droneDepart = dronePrev.get(drone);
 					double droneTime = (inst.distance[id][drone] + inst.distance[drone][droneDepart]) / inst.d_speed;
@@ -65,22 +64,22 @@ public class Solution {
 		}
 	}
 	
-	// æ£€æŸ¥è§£æ˜¯å¦æœ‰æ•ˆ
+	// ¼ì²é½âÊÇ·ñÓĞĞ§
 	public void check(Problem inst) {
 		ArrayList<Boolean> visited = new ArrayList<Boolean>(inst.c_n);
 		for (ArrayList<Integer> route: vehicleRoute) {
 			boolean droneAvailable = true;
 			double vehicleDistance = 0;
 			for (int i = 0; i < route.size(); i++) {
-				// æ— äººæœºæ˜¯å¦åˆæ³•
+				// ÎŞÈË»úÊÇ·ñºÏ·¨
 				Integer id = route.get(i);
-				if (dronePrev.get(id) != null) { // æ¥æ”¶æ— äººæœº
+				if (dronePrev.get(id) != null) { // ½ÓÊÕÎŞÈË»ú
 					if (droneAvailable == true) {
 						throw new RuntimeException("Invalid solution: Duplicate drone landing.");
 					}
 					droneAvailable = true;
 				}
-				// å‘é€æ— äººæœº
+				// ·¢ËÍÎŞÈË»ú
 				Integer drone = droneNext.get(id);
 				if (drone != null) {
 					if (droneAvailable == false) {
@@ -121,4 +120,5 @@ public class Solution {
 		
 		return "";
 	}
+	
 }
