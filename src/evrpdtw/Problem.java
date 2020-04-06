@@ -77,7 +77,7 @@ public class Problem {
 			if (c.type == 2 && c.pack_weight < d_weight) {
 				vec_droneable_poi_id.add(c.id);
 			}
-		}//可以被无人机服务的顾客点
+		}//鍙互琚棤浜烘満鏈嶅姟鐨勯【瀹㈢偣
 	}
 	
 	public void load_instance(String r_f_n, String p_f_n) throws FileNotFoundException {

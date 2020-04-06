@@ -5,9 +5,9 @@ import java.util.Random;
 
 class Sortie {
 
-	public int launch_position;//launch_index in route_index
-	public int delivery_position;//drone delivery customer id
-	public int recovery_position;//recovery_index in route_index
+	public int launch_position; // launch_index in route_index
+	public int delivery_position; // drone delivery customer id
+	public int recovery_position; // recovery_index in route_index
 	
 	public Sortie() {
 		
@@ -25,7 +25,7 @@ public class Heuristics {
 
 	public Problem inst;
 	
-	// solve·½·¨ÖĞµÄ²ÎÊı
+	// solveæ–¹æ³•ä¸­çš„å‚æ•°
 	public static final double timeLimit = 300;
 	public static final double maxTemperature = 3000;
 	public static final int maxNoImpv = 10;
@@ -57,9 +57,10 @@ public class Heuristics {
 	}
 	
 	public void solve() {
-		// Ä£ÄâÍË»ğ
+		// æ¨¡æ‹Ÿé€€ç«
 		initial();
 		sol.check(inst);
+		bestSolution = sol;
 		timerOn();
 		int iter = 0;
 		int noImpv = 0;
@@ -75,7 +76,7 @@ public class Heuristics {
 			}
 
 			if (sol.t_cost < bestSolution.t_cost) {
-				bestSolution = new Solution(sol); // Éî¿½±´
+				bestSolution = new Solution(sol); // æ·±æ‹·è´
 				System.out.println("Iter " + iter + ": " + bestSolution.t_cost);
 				noImpv = 0;
 			} else {
@@ -86,7 +87,7 @@ public class Heuristics {
 				}
 			}
 
-			// TODO: ×ÔÊÊÓ¦(Ğ´ÍêËÄ¸örepairÔÙËµ)
+			// TODO: è‡ªé€‚åº”(å†™å®Œå››ä¸ªrepairå†è¯´)
 
 			iter++;
 		}

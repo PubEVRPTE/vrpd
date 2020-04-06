@@ -44,17 +44,14 @@ public class Route{
 	public void calculate_cost(Problem inst) {
 		cost = 0;
 		weight = 0;
-		ArrayList<Double> cumulatedTime = new ArrayList<Double>(inst.c_n+1);
-		for (int i = 0; i < inst.c_n+1; i++) {
-			cumulatedTime.add(0.0);
-		}
+		ArrayList<Double> cumulatedTime = new ArrayList<Double>(Collections.nCopies(inst.c_n + 1, 0.0));
 		int id = vehicleRoute.get(0);
 		int prevId;
 		for (int i = 1; i < vehicleRoute.size(); i++) {
 			prevId = id;
 			id = vehicleRoute.get(i);
 
-			Integer drone = dronePrev.get(id); // ½ÓÊÕÎÞÈË»ú
+			Integer drone = dronePrev.get(id); // æŽ¥æ”¶æ— äººæœº
 			double vehicleTime = 0;
 			double operationTime = 0;
 			if (drone != null) {

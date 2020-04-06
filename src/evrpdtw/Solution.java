@@ -9,7 +9,7 @@ public class Solution {
 	public double time;
 	public double t_cost;
 	public ArrayList<Route> route_list;
-	public ArrayList<Integer> belongTo; // ´æ´¢Ã¿¸öµã·Ö±ğÊôÓÚÄÄÌõÂ·¾¶, ±ÜÃâÖğÂ·¾¶Ñ°ÕÒµã; ÔÚProblemÖĞÊÖ¶¯Î¬»¤
+	public ArrayList<Integer> belongTo; // å­˜å‚¨æ¯ä¸ªç‚¹åˆ†åˆ«å±äºå“ªæ¡è·¯å¾„, é¿å…é€è·¯å¾„å¯»æ‰¾ç‚¹; åœ¨Problemä¸­æ‰‹åŠ¨ç»´æŠ¤
 	
 	public Solution(Problem inst) {
 		this.inst = inst;
@@ -17,10 +17,7 @@ public class Solution {
 		time = 0;
 		t_cost = 0;
 		route_list = new ArrayList<Route>();
-		belongTo = new ArrayList<Integer>();
-		for (int i = 0; i < inst.c_n + 1; i++) {
-			belongTo.add(-1);
-		}
+		belongTo = new ArrayList<Integer>(Collections.nCopies(inst.c_n + 1, -1));
 		belongTo.set(0, 0);
 	}
 	
@@ -47,29 +44,26 @@ public class Solution {
 		}
 	}
 	
-	// ¼ì²é½âÊÇ·ñÓĞĞ§
+	// æ£€æŸ¥è§£æ˜¯å¦æœ‰æ•ˆ
 	public void check(Problem inst) {
 		
 		calculate_cost(inst);
-		ArrayList<Boolean> visited = new ArrayList<Boolean>(inst.c_n+1);
-		for (int i = 0; i < inst.c_n+1; i++) {
-			visited.add(false);
-		}
+		ArrayList<Boolean> visited = new ArrayList<Boolean>(Collections.nCopies(inst.c_n + 1, false));
 		for (Route route: route_list) {
 			double totalWeight = 0;
 			ArrayList<Integer> vehicleRoute = route.vehicleRoute;
 			boolean droneAvailable = true;
 			for (int i = 0; i < vehicleRoute.size(); i++) {
-				// ÎŞÈË»úÊÇ·ñºÏ·¨
+				// æ— äººæœºæ˜¯å¦åˆæ³•
 				Integer id = vehicleRoute.get(i);
-				if (route.dronePrev.get(id) != null) { // ½ÓÊÕÎŞÈË»ú
+				if (route.dronePrev.get(id) != null) { // æ¥æ”¶æ— äººæœº
 					if (droneAvailable == true) {
 						System.out.println(id );
 						throw new RuntimeException("Invalid solution: Duplicate drone landing.");
 					}
 					droneAvailable = true;
 				}
-				// ·¢ËÍÎŞÈË»ú
+				// å‘é€æ— äººæœº
 				Integer drone = route.droneNext.get(id);
 				if (drone != null) {
 					if (droneAvailable == false) {
