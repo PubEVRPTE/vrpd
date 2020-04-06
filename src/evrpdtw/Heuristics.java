@@ -52,6 +52,7 @@ public class Heuristics {
 	
 	public void initial() {
 		nearest_neighbor();
+		sol.check(inst);
 		drone_addition();
 	}
 	

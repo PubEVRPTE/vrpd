@@ -66,12 +66,15 @@ public class Route{
 				cumulatedTime.set(id, cumulatedTime.get(droneDepart) + droneTime + operationTime);
 				weight += inst.vec_poi.get(drone).pack_weight;
 			}
-			vehicleTime += inst.distance[prevId][id] / inst.v_speed + inst.v_serviceTime;
+			vehicleTime += inst.distance[prevId][id] / inst.v_speed;
+			if (i < vehicleRoute.size() - 1) {
+				vehicleTime += inst.v_serviceTime;
+			}
 			cost += inst.v_cost * vehicleTime;
 			cumulatedTime.set(id, Math.max(cumulatedTime.get(prevId) + vehicleTime + operationTime, cumulatedTime.get(id)));
 			weight += inst.vec_poi.get(id).pack_weight;
 		}
-		time = cumulatedTime.get(0);
+		time = cumulatedTime.get(0)-inst.v_serviceTime;
 		change = false;
 	}
 	
