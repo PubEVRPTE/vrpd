@@ -9,7 +9,7 @@ public class Solution {
 	public double time;
 	public double t_cost;
 	public ArrayList<Route> route_list;
-	public ArrayList<Integer> belongTo; // å­˜å‚¨æ¯ä¸ªç‚¹åˆ†åˆ«å±äºå“ªæ¡è·¯å¾„, é¿å…é€è·¯å¾„å¯»æ‰¾ç‚¹; åœ¨Problemä¸­æ‰‹åŠ¨ç»´æŠ¤
+	public ArrayList<Integer> belongTo; // ´æ´¢Ã¿¸öµã·Ö±ğÊôÓÚÄÄÌõÂ·¾¶, ±ÜÃâÖğÂ·¾¶Ñ°ÕÒµã; ÔÚProblemÖĞÊÖ¶¯Î¬»¤
 	
 	public Solution(Problem inst) {
 		this.inst = inst;
@@ -21,6 +21,7 @@ public class Solution {
 		for (int i = 0; i < inst.c_n + 1; i++) {
 			belongTo.add(-1);
 		}
+		belongTo.set(0, 0);
 	}
 	
 	public Solution(Solution obj) {
@@ -46,24 +47,29 @@ public class Solution {
 		}
 	}
 	
-	// æ£€æŸ¥è§£æ˜¯å¦æœ‰æ•ˆ
+	// ¼ì²é½âÊÇ·ñÓĞĞ§
 	public void check(Problem inst) {
+		
 		calculate_cost(inst);
-		ArrayList<Boolean> visited = new ArrayList<Boolean>(inst.c_n);
+		ArrayList<Boolean> visited = new ArrayList<Boolean>(inst.c_n+1);
+		for (int i = 0; i < inst.c_n+1; i++) {
+			visited.add(false);
+		}
 		for (Route route: route_list) {
 			double totalWeight = 0;
 			ArrayList<Integer> vehicleRoute = route.vehicleRoute;
 			boolean droneAvailable = true;
 			for (int i = 0; i < vehicleRoute.size(); i++) {
-				// æ— äººæœºæ˜¯å¦åˆæ³•
+				// ÎŞÈË»úÊÇ·ñºÏ·¨
 				Integer id = vehicleRoute.get(i);
-				if (route.dronePrev.get(id) != null) { // æ¥æ”¶æ— äººæœº
+				if (route.dronePrev.get(id) != null) { // ½ÓÊÕÎŞÈË»ú
 					if (droneAvailable == true) {
+						System.out.println(id );
 						throw new RuntimeException("Invalid solution: Duplicate drone landing.");
 					}
 					droneAvailable = true;
 				}
-				// å‘é€æ— äººæœº
+				// ·¢ËÍÎŞÈË»ú
 				Integer drone = route.droneNext.get(id);
 				if (drone != null) {
 					if (droneAvailable == false) {
@@ -72,9 +78,7 @@ public class Solution {
 					Integer droneLanding = route.droneNext.get(drone);
 					if (droneLanding == null) {
 						throw new RuntimeException("Invalid solution: Drone route broken - it never lands.");
-					}
-					// TODO: æ— äººæœºç°åœ¨æ˜¯åœåœ¨åœ°ä¸Šç­‰å¡è½¦æ¥çš„ï¼Œè¦æ”¹æ­£ç¡®
-					if ((inst.distance[i][drone] + inst.distance[drone][droneLanding]) / inst.d_speed + inst.d_serviceTime + inst.l_t > inst.d_time) {
+					} else if ((inst.distance[i][drone] + inst.distance[drone][droneLanding]) / inst.d_speed + inst.d_serviceTime + inst.l_t > inst.d_time) {
 						throw new RuntimeException("Invalid solution: Drone departs for infeasible place.");
 					}
 					if (route.dronePrev.get(drone) != id || route.dronePrev.get(droneLanding) != drone) {

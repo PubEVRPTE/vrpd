@@ -25,7 +25,7 @@ public class Heuristics {
 
 	public Problem inst;
 	
-	// solveæ–¹æ³•ä¸­çš„å‚æ•°
+	// solve·½·¨ÖĞµÄ²ÎÊı
 	public static final double timeLimit = 300;
 	public static final double maxTemperature = 3000;
 	public static final int maxNoImpv = 10;
@@ -56,9 +56,9 @@ public class Heuristics {
 	}
 	
 	public void solve() {
-		// æ¨¡æ‹Ÿé€€ç«
+		// Ä£ÄâÍË»ğ
 		initial();
-		
+		sol.check(inst);
 		timerOn();
 		int iter = 0;
 		int noImpv = 0;
@@ -74,7 +74,7 @@ public class Heuristics {
 			}
 
 			if (sol.t_cost < bestSolution.t_cost) {
-				bestSolution = new Solution(sol); // æ·±æ‹·è´
+				bestSolution = new Solution(sol); // Éî¿½±´
 				System.out.println("Iter " + iter + ": " + bestSolution.t_cost);
 				noImpv = 0;
 			} else {
@@ -85,7 +85,7 @@ public class Heuristics {
 				}
 			}
 
-			// TODO: è‡ªé€‚åº”(å†™å®Œå››ä¸ªrepairå†è¯´)
+			// TODO: ×ÔÊÊÓ¦(Ğ´ÍêËÄ¸örepairÔÙËµ)
 
 			iter++;
 		}
@@ -96,7 +96,7 @@ public class Heuristics {
 		
 		int route_index = 0;
 		while (!vec_poi_id.isEmpty()) {
-			Route r = new Route();
+			Route r = new Route(inst);
 			r.vehicleRoute.add(inst.vec_poi.get(0).id);
 			r.vehicleRoute.add(inst.vec_poi.get(0).id);
 			while (!vec_poi_id.isEmpty()) {
@@ -149,68 +149,22 @@ public class Heuristics {
 		for (Integer c:inst.vec_droneable_poi_id) {
 			//remove
 			Solution sol_x = new Solution(sol);
-			ArrayList<Integer> to_lookfor = sol_x.route_list.get(sol_x.belongTo.get(c)).vehicleRoute;
-			for (int i = 0; i < to_lookfor.size(); i++) {
-				if (to_lookfor.get(i) == c) {
-					to_lookfor.remove(i);
-					//TODO: update sol_x !!!
-					break;
-				}
-			}
-			//find
-			Sortie bestSortie = FindSortie(c, sol_x, Integer.MAX_VALUE);
-			if (bestSortie != null) {
-				//update
-				sol_add_drone(sol_x, bestSortie);
-				sol = sol_x;
-			}
-			
-		}
-	}
-	
-	public Sortie FindSortie(int c, Solution sol_x, double thresholdCost) {
-		Sortie BestSortie = null;
-		for (int r_index = 0; r_index < sol_x.route_list.size(); r_index++) {
-			Route r = sol_x.route_list.get(r_index);
-			if (r.weight + inst.vec_poi.get(c).pack_weight < inst.v_weight_drone) {
-				int r_n = r.vehicleRoute.size();
-				for (int i = 0; i < r_n-1; i++ ) {
-					for (int k = i+1; k < r_n; k++) {
-						if (r.droneNext.get(i) == null && r.dronePrev.get(k) == null) {
-							int launch_id = r.vehicleRoute.get(i);
-							int recovery_id = r.vehicleRoute.get(k);
-							Sortie p = new Sortie(launch_id, c, recovery_id);
-							double drone_distance = inst.distance[launch_id][c] + inst.distance[c][recovery_id];
-							double vehicle_time = inst.distance[launch_id][recovery_id]/inst.v_speed;
-							double drone_time = inst.d_serviceTime + drone_distance/inst.d_speed;
-							if (r.time + inst.l_t + inst.r_t + Math.max(vehicle_time, drone_time) - vehicle_time < inst.v_time && r.cost + drone_distance*inst.d_cost < thresholdCost) {
-								BestSortie = p;
-								thresholdCost = r.cost + drone_distance*inst.d_cost;
-							}
-						}
-						
-						
+			Route to_lookfor = sol_x.route_list.get(sol_x.belongTo.get(c));
+			if (to_lookfor.droneNext.get(c) == null && to_lookfor.dronePrev.get(c) == null) {
+				to_lookfor.removeElement(c);
+				//find
+				Sortie bestSortie = neighborhood.FindSortie(c, sol_x, Integer.MAX_VALUE);
+				if (bestSortie != null) {
+					//update
+					sol_x.route_list.get(sol_x.belongTo.get(bestSortie.launch_position)).insertDrone(bestSortie);
+					System.out.println("--------------------------------");
+					for (int i = 0; i < sol_x.route_list.size(); i++) {
+						System.out.println(sol_x.route_list.get(i).droneNext.size()+" "+sol_x.route_list.get(i).dronePrev.size());
 					}
+					sol = sol_x;
 				}
 			}
 		}
-		return BestSortie;
-	}
-	
-	public void sol_add_drone(Solution sol_x, Sortie q) {
-		int l_id = q.launch_position;
-		int r_id = q.recovery_position;
-		int d_id = q.delivery_position;
-		sol_x.route_list.get(sol_x.belongTo.get(l_id)).droneNext.put(l_id, d_id);
-		sol_x.route_list.get(sol_x.belongTo.get(l_id)).droneNext.put(d_id, r_id);
-		sol_x.route_list.get(sol_x.belongTo.get(l_id)).dronePrev.put(r_id, d_id);
-		sol_x.route_list.get(sol_x.belongTo.get(l_id)).dronePrev.put(d_id, l_id);
-		sol_x.t_weight += inst.vec_poi.get(d_id).pack_weight;
-		double drone_distance = inst.distance[l_id][d_id] + inst.distance[d_id][r_id];
-		double vehicle_time = inst.distance[l_id][r_id]/inst.v_speed;
-		double drone_time = inst.d_serviceTime + drone_distance/inst.d_speed;
-		sol_x.time += inst.l_t + inst.r_t + Math.max(drone_time, vehicle_time) - vehicle_time;
-		sol_x.t_cost += drone_distance*inst.d_cost;
 	}
 	
 	public void timerOn() {

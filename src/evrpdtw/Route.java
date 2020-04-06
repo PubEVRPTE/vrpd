@@ -4,24 +4,29 @@ import java.util.*;
 
 public class Route{
 
+	public Problem inst;
+	
 	public double cost;
 	public double weight;
 	public double time;
 	public boolean depart;//whether depart;
+	public boolean change;
 	
 	public ArrayList<Integer> vehicleRoute;
 	
 	public HashMap<Integer, Integer> droneNext;
 	public HashMap<Integer, Integer> dronePrev;
 	
-	public Route() {
+	public Route(Problem inst) {
 		cost = 0;
 		weight = 0;
 		time = 0;
 		depart = false;
+		change = false;
 		vehicleRoute = new ArrayList<Integer>();
 		droneNext = new HashMap<Integer, Integer>();
 		dronePrev = new HashMap<Integer, Integer>();
+		this.inst = inst;
 	}
 	
 	public Route(Route r) {
@@ -29,22 +34,27 @@ public class Route{
 		weight = r.weight;
 		time = r.time;
 		depart = r.depart;
+		change = r.change;
 		vehicleRoute = new ArrayList<Integer>(r.vehicleRoute);
 		droneNext = new HashMap<Integer, Integer>(r.droneNext);
 		dronePrev = new HashMap<Integer, Integer>(r.dronePrev);
+		inst = r.inst;
 	}
 
 	public void calculate_cost(Problem inst) {
 		cost = 0;
 		weight = 0;
-		ArrayList<Double> cumulatedTime = new ArrayList<Double>(inst.c_n);
+		ArrayList<Double> cumulatedTime = new ArrayList<Double>(inst.c_n+1);
+		for (int i = 0; i < inst.c_n+1; i++) {
+			cumulatedTime.add(0.0);
+		}
 		int id = vehicleRoute.get(0);
 		int prevId;
 		for (int i = 1; i < vehicleRoute.size(); i++) {
 			prevId = id;
 			id = vehicleRoute.get(i);
 
-			Integer drone = dronePrev.get(id); // æŽ¥æ”¶æ— äººæœº
+			Integer drone = dronePrev.get(id); // ½ÓÊÕÎÞÈË»ú
 			double vehicleTime = 0;
 			double operationTime = 0;
 			if (drone != null) {
@@ -62,8 +72,34 @@ public class Route{
 			weight += inst.vec_poi.get(id).pack_weight;
 		}
 		time = cumulatedTime.get(0);
+		change = false;
 	}
-
+	
+	public void removeElement(int c) {
+		for (int i = 0; i < vehicleRoute.size(); i++) {
+			if (vehicleRoute.get(i) == c) {
+				vehicleRoute.remove(i);
+				break;
+			}
+		}
+		calculate_cost(inst);
+	}
+	
+	public void insertDrone(Sortie q) {
+		int l_id = q.launch_position;
+		int r_id = q.recovery_position;
+		int d_id = q.delivery_position;
+		droneNext.put(l_id, d_id);
+		droneNext.put(d_id, r_id);
+		dronePrev.put(r_id, d_id);
+		dronePrev.put(d_id, l_id);
+		calculate_cost(inst);
+	}
+	
+	public void insertTruck(int index, int c) {
+		
+	}
+	
 	public String toString() {
 		
 		return " ";
