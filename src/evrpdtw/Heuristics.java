@@ -61,6 +61,7 @@ public class Heuristics {
 		initial();
 		sol.check(inst);
 		bestSolution = sol;
+		System.out.println("Initial: " + bestSolution.t_cost);
 		timerOn();
 		int iter = 0;
 		int noImpv = 0;
@@ -69,6 +70,7 @@ public class Heuristics {
 			Solution newSolution = new Solution(sol);
 			ArrayList<Integer> to_insert = neighborhood.destroy(newSolution);
 			neighborhood.repair(newSolution, to_insert);
+			System.out.println("Iter " + iter + ": " + newSolution.t_cost);
 
 			double temperature = maxTemperature * (time() / timeLimit);
 			if (random.nextDouble() < Math.exp((sol.t_cost - newSolution.t_cost) / temperature)) {

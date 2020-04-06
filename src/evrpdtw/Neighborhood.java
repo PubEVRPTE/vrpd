@@ -29,7 +29,7 @@ public class Neighborhood {
 
 	public void repair(Solution sol, ArrayList<Integer> to_insert) {
 		sol.calculate_cost(inst); // 效率低，待改进
-		repair1(sol, to_insert);
+		repair2(sol, to_insert);
 		sol.check(inst); // 调试检查正确性用，没问题就注释掉
 	}
 
@@ -225,34 +225,32 @@ public class Neighborhood {
 	}
 
 	public void repair2(Solution sol, ArrayList<Integer> to_insert) {
-		Solution copySol = new Solution(sol);
-		int free_c = to_insert.size();
 		// 随机插入卡车
-		while (free_c > 0) {
-			int id = random.nextInt(free_c) + 1;
-			TruckRandomInsertion(id, copySol);
-			to_insert.remove(id);
-			free_c -= 1;
+		while (to_insert.size() > 0) {
+			int c = to_insert.remove(random.nextInt(to_insert.size()));
+			TruckRandomInsertion(c, sol);
 		}
+		sol.calculate_cost(inst);
 
 		// 部分改为无人机
 		ArrayList<poi> copyCus = new ArrayList<poi>(inst.vec_poi);
-		int c_n = copyCus.size();
-		while (c_n > 0) {
-			int id = random.nextInt(c_n) + 1;
-			poi current = copyCus.get(id);
-			copyCus.remove(id);
-			int routeId = copySol.belongTo.get(id);
-			Route route = copySol.route_list.get(routeId);
-			Integer droneN = route.droneNext.get(id);
-			Integer droneP = route.dronePrev.get(id);
-			if (current.pack_weight < inst.d_weight && droneN == null && droneP == null) {
-				double threshold = copySol.t_cost;
-				copySol.belongTo.remove(id);
-				copyCus.remove(id);
-				FindSortie_w(id, copySol, threshold);
+		while (copyCus.size() > 1) {
+			Solution newSolution = new Solution(sol);
+			int id = random.nextInt(copyCus.size()-1) + 1;
+			poi current = copyCus.remove(id);
+			Route route = newSolution.route_list.get(newSolution.belongTo.get(id));
+			if (current.pack_weight < inst.d_weight && route.droneNext.get(id) == null && route.dronePrev.get(id) == null) {
+				double threshold = newSolution.t_cost;
+				route.removeElement(id);
+				newSolution.belongTo.set(id, -1);
+				Sortie bestSortie = FindSortie_w(id, newSolution, threshold);
+				if (bestSortie != null) {
+					int routeId = newSolution.belongTo.get(bestSortie.launch_position);
+					newSolution.route_list.get(routeId).insertDrone(bestSortie);
+					newSolution.belongTo.set(id, routeId);
+					sol = newSolution;
+				}
 			}
-
 		}
 	}
 
@@ -401,56 +399,54 @@ public class Neighborhood {
 	}
 
 	public void TruckRandomInsertion(int c, Solution s) {
-		// TODO
-		double near_distance = 5;
+		final double near_distance = 5;
 		ArrayList<Integer> c_toInsert = new ArrayList<Integer>();
+		ArrayList<Integer> c_toInsertIndex = new ArrayList<Integer>();
 		for (int i = 0; i < s.route_list.size(); i++) {
-			Route r = s.route_list.get(i);
-			for (int j = 0; j < r.vehicleRoute.size() - 1; j++) {
-				int id = r.vehicleRoute.get(j);
-				if (inst.distance[c][id] < near_distance && inst.distance[c][id + 1] < near_distance) {
+			Route route = s.route_list.get(i);
+			for (int j = 0; j < route.vehicleRoute.size() - 1; j++) {
+				int id = route.vehicleRoute.get(j);
+				int nextId = route.vehicleRoute.get(j + 1);
+				if (inst.distance[c][id] < near_distance && inst.distance[c][nextId] < near_distance
+					&& inst.vec_poi.get(id).pack_weight + route.weight <= inst.v_weight_drone
+					&& route.droneNext.get(id) == null && route.dronePrev.get(id) == null) {
 					c_toInsert.add(id);
+					c_toInsertIndex.add(j);
 				}
 			}
 		}
+
 		Route r_toInsert = null;
 		int route_index = -1;
-		while (true) {
+		while (c_toInsert.size() > 0) {
 			int ran = random.nextInt(c_toInsert.size());
 			int c_insert = c_toInsert.get(ran);
-			int c_insert_index = -1;
+			int c_insert_index = c_toInsertIndex.get(ran);
 			route_index = s.belongTo.get(c_insert);
-			Route r = s.route_list.get(route_index);
-			if (inst.vec_poi.get(c_insert).pack_weight + r.weight <= inst.v_weight_drone) {
-				for (int i = 0; i < r.vehicleRoute.size(); i++) {
-					if (r.vehicleRoute.get(i) == c_insert) {
-						c_insert_index = i;
-						break;
-					}
-				}
-				if (r.droneNext.get(c_insert) == null || r.dronePrev.get(c_insert) == null) {
-					Route r_t = new Route(r);
-					r_t.vehicleRoute.add(c_insert_index + 1, c);
-					r_t.calculate_cost(inst);
-					r_toInsert = r_t;
-				} else {
-					c_toInsert.remove(ran);
-				}
-				if (r_toInsert != null || c_toInsert.isEmpty()) {
-					break;
-				}
+			Route route = s.route_list.get(route_index);
+
+			Route newRoute = new Route(route);
+			newRoute.vehicleRoute.add(c_insert_index + 1, c);
+			newRoute.calculate_cost(inst);
+			if (newRoute.time < inst.v_time) {
+				r_toInsert = newRoute;
+				break;
+			} else {
+				c_toInsert.remove(ran);
+				c_toInsertIndex.remove(ran);
 			}
-
 		}
-
+		
 		if (r_toInsert == null) {
 			r_toInsert = new Route(inst);
 			r_toInsert.vehicleRoute.add(0);
 			r_toInsert.vehicleRoute.add(c);
 			r_toInsert.vehicleRoute.add(0);
 			s.route_list.add(r_toInsert);
+			s.belongTo.set(c, s.route_list.size() - 1);
 		} else {
 			s.route_list.set(route_index, r_toInsert);
+			s.belongTo.set(c, route_index);
 		}
 	}
 
