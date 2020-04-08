@@ -29,7 +29,7 @@ public class Neighborhood {
 
 	public void repair(Solution sol, ArrayList<Integer> to_insert) {
 		sol.calculate_cost(inst); // 效率低，待改进
-		repair2(sol, to_insert);
+		repair3(sol, to_insert);
 		sol.check(inst); // 调试检查正确性用，没问题就注释掉
 	}
 
@@ -86,7 +86,7 @@ public class Neighborhood {
 					removed.set(id, true);
 					beta--;
 					found = true;
-				} else if (id == route.droneNext.get(current)) { // case 2: 由无人机配送
+				} else if (id.equals(route.droneNext.get(current))) { // case 2: 由无人机配送
 					int droneLanding = route.droneNext.get(id);
 					route.droneNext.remove(current);
 					route.droneNext.remove(id);
@@ -152,7 +152,7 @@ public class Neighborhood {
 					removed.set(id, true);
 					beta--;
 					found = true;
-				} else if (route.droneNext.get(current) == id) { // case 2: 由无人机配送
+				} else if (id.equals(route.droneNext.get(current))) { // case 2: 由无人机配送
 					int droneLanding = route.droneNext.get(id);
 					route.droneNext.remove(current);
 					route.droneNext.remove(id);
@@ -277,8 +277,12 @@ public class Neighborhood {
 			}
 
 			// 尝试插入
-			if (AttempBestInsertion(minidx, sol.route_list.get(sol.belongTo.get(minidx))) == false) {
-				uninserted.add(minidx);
+			int routeId = sol.belongTo.get(minidx);
+			if (AttemptBestInsertion(c, sol.route_list.get(routeId))) {
+				notInserted.set(c, true);
+				sol.belongTo.set(c, routeId);
+			} else {
+				uninserted.add(c);
 			}
 		}
 		if (uninserted.size() > 0) {
@@ -517,7 +521,7 @@ public class Neighborhood {
 		return c_nearest;
 	}
 
-	public boolean AttempBestInsertion(int c, Route route) {
+	public boolean AttemptBestInsertion(int c, Route route) {
 		boolean success = false;
 		int idx = -1, land = -1; // 若isDrone为true, 则idx和land记录ID; 否则记录index(方便两种数据结构的插入)
 		boolean isDrone = false;
@@ -525,37 +529,42 @@ public class Neighborhood {
 		// 合法性检查: 卡车超重
 		double weight = inst.vec_poi.get(c).pack_weight;
 		if (weight + route.weight < inst.v_weight_drone) {
-			int id = route.vehicleRoute.get(0);
 			boolean droneAvailable = (route.droneNext.get(0) == null);
-			for (int i = 1; i < route.vehicleRoute.size(); i++) {
-				id = route.vehicleRoute.get(i);
-				// 卡车插入
-				Route newRoute = new Route(route);
-				newRoute.vehicleRoute.add(i, c);
-				newRoute.calculate_cost(inst);
-				if (newRoute.cost < cost) {
-					idx = i;
-					isDrone = false;
-					cost = newRoute.cost;
-					success = true;
+			for (int i = 0; i < route.vehicleRoute.size(); i++) {
+				int id = route.vehicleRoute.get(i);
+				if (id > 0) {
+					// 卡车插入
+					Route newRoute = new Route(route);
+					newRoute.vehicleRoute.add(i, c);
+					newRoute.calculate_cost(inst);
+					if (newRoute.cost < cost) {
+						idx = i;
+						isDrone = false;
+						cost = newRoute.cost;
+						success = true;
+					}
 				}
+
 				if (route.dronePrev.get(id) != null) {
 					droneAvailable = true;
 				}
 				if (route.droneNext.get(id) != null) {
 					droneAvailable = false;
 				}
+				
 				// 无人机插入
 				// 合法性检查: 超重
 				if (weight < inst.d_weight && droneAvailable) {
 					// 枚举所有从此出发的无人机路径
-					int landIdx = i + 1;
-					while (route.droneNext.get(landIdx) == null) {
-						// 合法性检查: 时间
+					for (int landIdx = i + 1; landIdx < route.vehicleRoute.size(); landIdx++) {
 						int landId = route.vehicleRoute.get(landIdx);
+						if (route.droneNext.get(landId) != null) {
+							break;
+						}
+						// 合法性检查: 时间
 						if ((inst.distance[id][c] + inst.distance[c][landId]) / inst.d_speed + inst.d_serviceTime
 								+ inst.l_t < inst.d_time) {
-							newRoute = new Route(route);
+							Route newRoute = new Route(route);
 							newRoute.droneNext.put(id, c);
 							newRoute.droneNext.put(c, landId);
 							newRoute.dronePrev.put(c, id);
@@ -569,7 +578,6 @@ public class Neighborhood {
 								success = true;
 							}
 						}
-						landIdx++;
 					}
 				}
 

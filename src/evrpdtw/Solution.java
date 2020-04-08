@@ -75,7 +75,7 @@ public class Solution {
 					} else if ((inst.distance[i][drone] + inst.distance[drone][droneLanding]) / inst.d_speed + inst.d_serviceTime + inst.l_t > inst.d_time) {
 						throw new RuntimeException("Invalid solution: Drone departs for infeasible place.");
 					}
-					if (route.dronePrev.get(drone) != id || route.dronePrev.get(droneLanding) != drone) {
+					if (!route.dronePrev.get(drone).equals(id) || !route.dronePrev.get(droneLanding).equals(drone)) {
 						throw new RuntimeException("Invalid solution: Drone route does not consist.");
 					}
 					double weight = inst.vec_poi.get(drone).pack_weight;

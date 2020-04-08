@@ -70,7 +70,6 @@ public class Heuristics {
 			Solution newSolution = new Solution(sol);
 			ArrayList<Integer> to_insert = neighborhood.destroy(newSolution);
 			neighborhood.repair(newSolution, to_insert);
-			System.out.println("Iter " + iter + ": " + newSolution.t_cost);
 
 			double temperature = maxTemperature * (time() / timeLimit);
 			if (random.nextDouble() < Math.exp((sol.t_cost - newSolution.t_cost) / temperature)) {
@@ -79,7 +78,7 @@ public class Heuristics {
 
 			if (sol.t_cost < bestSolution.t_cost) {
 				bestSolution = new Solution(sol); // 深拷贝
-				System.out.println("Iter " + iter + ": " + bestSolution.t_cost);
+				System.out.println("Iter " + iter + ": " + bestSolution.t_cost + ", time: " + time());
 				noImpv = 0;
 			} else {
 				noImpv++;
@@ -150,7 +149,7 @@ public class Heuristics {
 	}
 	
 	public void drone_addition() {
-		for (Integer c:inst.vec_droneable_poi_id) {
+		for (Integer c: inst.vec_droneable_poi_id) {
 			//remove
 			Solution sol_x = new Solution(sol);
 			Route to_lookfor = sol_x.route_list.get(sol_x.belongTo.get(c));
