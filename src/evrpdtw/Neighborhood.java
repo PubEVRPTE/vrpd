@@ -8,7 +8,7 @@ public class Neighborhood {
 	public static final int c_low_lb = 1;
 	public static final int c_low_ub = 3;
 	public static final int c_high = 40;
-	public static final double delta = 0.2;
+	public static final double delta = 0.1;
 	public static final Random random = new Random();
 
 	public static final double overflow_cent = 0.1;
@@ -29,7 +29,17 @@ public class Neighborhood {
 
 	public void repair(Solution sol, ArrayList<Integer> to_insert) {
 		sol.calculate_cost(inst); // 效率低，待改进
-		repair3(sol, to_insert);
+		double r = random.nextDouble();
+		if (r < 0.25) {
+			repair1(sol, to_insert);
+		} else if (r < 0.5) {
+			repair2(sol, to_insert);
+		} else if (r < 0.75) {
+			repair3(sol, to_insert);
+		} else {
+			repair4(sol, to_insert);
+		}
+		
 		sol.check(inst); // 调试检查正确性用，没问题就注释掉
 	}
 
@@ -291,26 +301,24 @@ public class Neighborhood {
 	}
 
 	public void repair4(Solution sol, ArrayList<Integer> to_insert) {
-		ArrayList<poi> copyCus = new ArrayList<poi>(inst.vec_poi);
-		ArrayList<Integer> oversize = new ArrayList<>();
-		poi a = new poi();
-		int id = 0;
-		double w = 0;
+		ArrayList<Integer> truck_insert = new ArrayList<Integer>();
 		// 去除超重的
-		for (int i = 0; i < copyCus.size(); i++) {
-			a = copyCus.get(i);
-			w = a.pack_weight;
-			if (w > inst.d_weight) {
-				oversize.add(a.id);
-				copyCus.remove(a);
+		for (int i = to_insert.size() - 1; i >= 0 ; i--) {
+			int id = to_insert.get(i);
+			if (inst.vec_poi.get(id).pack_weight > inst.d_weight) {
+				truck_insert.add(id);
+				to_insert.remove(i);
 			}
 		}
-		Solution copySol = new Solution(sol);
-		for (int i = 0; i < oversize.size(); i++) {
-			id = oversize.get(i);
-			TruckBestInsertion(id, copySol);
+
+		// 随机插入卡车
+		while (truck_insert.size() > 0) {
+			int c = truck_insert.remove(random.nextInt(truck_insert.size()));
+			TruckBestInsertion(c, sol);
 		}
-		repair1(copySol, to_insert);
+		sol.calculate_cost(inst);
+
+		repair3(sol, to_insert);
 	}
 
 	public void TruckBestInsertion(int c, Solution s) {
@@ -513,12 +521,6 @@ public class Neighborhood {
 			}
 		}
 		return BestSortie;
-	}
-
-	public int NearestCustomer(int c, Solution s) {
-		int c_nearest = -1;
-
-		return c_nearest;
 	}
 
 	public boolean AttemptBestInsertion(int c, Route route) {
