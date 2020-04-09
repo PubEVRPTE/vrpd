@@ -71,7 +71,7 @@ public class Route{
 			cumulatedTime.set(id, Math.max(cumulatedTime.get(prevId) + vehicleTime + operationTime, cumulatedTime.get(id)));
 			weight += inst.vec_poi.get(id).pack_weight;
 		}
-		time = cumulatedTime.get(0)-inst.v_serviceTime;
+		time = cumulatedTime.get(0);
 		change = false;
 	}
 	

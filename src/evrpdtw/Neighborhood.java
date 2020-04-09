@@ -541,7 +541,7 @@ public class Neighborhood {
 					Route newRoute = new Route(route);
 					newRoute.vehicleRoute.add(i, c);
 					newRoute.calculate_cost(inst);
-					if (newRoute.cost < cost) {
+					if (newRoute.time < inst.v_time && newRoute.cost < cost) {
 						idx = i;
 						isDrone = false;
 						cost = newRoute.cost;

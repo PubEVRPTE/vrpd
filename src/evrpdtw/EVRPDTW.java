@@ -12,6 +12,5 @@ public class EVRPDTW {
 		inst.prepare();
 		Heuristics heur = new Heuristics(inst);
 		heur.solve();
-		
 	}
 }
