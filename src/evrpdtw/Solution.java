@@ -53,12 +53,12 @@ public class Solution {
 			double totalWeight = 0;
 			ArrayList<Integer> vehicleRoute = route.vehicleRoute;
 			boolean droneAvailable = true;
-			for (int i = 0; i < vehicleRoute.size(); i++) {
+			
+			for (int i = 1; i < vehicleRoute.size(); i++) {
 				// 无人机是否合法
 				Integer id = vehicleRoute.get(i);
 				if (route.dronePrev.get(id) != null) { // 接收无人机
 					if (droneAvailable == true) {
-						System.out.println(id );
 						throw new RuntimeException("Invalid solution: Duplicate drone landing.");
 					}
 					droneAvailable = true;
