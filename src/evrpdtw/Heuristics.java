@@ -92,6 +92,7 @@ public class Heuristics {
 
 			iter++;
 		}
+		System.out.println("Best: " + bestSolution.t_cost + ", time: " + time());
 	}
 	
 	public void nearest_neighbor() {

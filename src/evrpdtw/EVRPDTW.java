@@ -13,7 +13,5 @@ public class EVRPDTW {
 		Heuristics heur = new Heuristics(inst);
 		heur.solve();
 		
-		System.out.println(heur.bestSolution.toString());
-		
 	}
 }

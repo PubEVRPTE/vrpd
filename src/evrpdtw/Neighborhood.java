@@ -318,7 +318,9 @@ public class Neighborhood {
 		}
 		sol.calculate_cost(inst);
 
-		repair3(sol, to_insert);
+		if (to_insert.size() > 0) {
+			repair3(sol, to_insert);
+		}
 	}
 
 	public void TruckBestInsertion(int c, Solution s) {
@@ -572,7 +574,7 @@ public class Neighborhood {
 							newRoute.dronePrev.put(c, id);
 							newRoute.dronePrev.put(landId, c);
 							newRoute.calculate_cost(inst);
-							if (newRoute.cost < cost) {
+							if (newRoute.time < inst.v_time && newRoute.cost < cost) {
 								idx = id;
 								land = landId;
 								isDrone = true;
