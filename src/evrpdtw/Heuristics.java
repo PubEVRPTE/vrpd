@@ -27,8 +27,8 @@ public class Heuristics {
 	
 	// solve方法中的参数
 	public static final double timeLimit = 300;
-	public static final double maxTemperature = 3000;
-	public static final int maxNoImpv = 10;
+	public static final double maxTemperatureRatio = 0.004;
+	public static final int maxNoImpv = 1000;
 	public long timeStart;
 	
 	public ArrayList<Integer> vec_poi_id;//not cover depot
@@ -52,7 +52,6 @@ public class Heuristics {
 	
 	public void initial() {
 		nearest_neighbor();
-		sol.check(inst);
 		drone_addition();
 	}
 	
@@ -65,6 +64,8 @@ public class Heuristics {
 		timerOn();
 		int iter = 0;
 		int noImpv = 0;
+
+		double maxTemperature = maxTemperatureRatio * sol.t_cost;
 
 		while (timeout() == false) {
 			Solution newSolution = new Solution(sol);
@@ -150,23 +151,30 @@ public class Heuristics {
 	}
 	
 	public void drone_addition() {
-		for (Integer c: inst.vec_droneable_poi_id) {
-			//remove
-			Solution sol_x = new Solution(sol);
-			Route to_lookfor = sol_x.route_list.get(sol_x.belongTo.get(c));
-			if (to_lookfor.droneNext.get(c) == null && to_lookfor.dronePrev.get(c) == null) {
-				to_lookfor.removeElement(c);
-				//find
-				Sortie bestSortie = neighborhood.FindSortie(c, sol_x, Integer.MAX_VALUE);
-				if (bestSortie != null) {
-					//update
-					sol_x.route_list.get(sol_x.belongTo.get(bestSortie.launch_position)).insertDrone(bestSortie);
-					System.out.println("--------------------------------");
-					for (int i = 0; i < sol_x.route_list.size(); i++) {
-						System.out.println(sol_x.route_list.get(i).droneNext.size()+" "+sol_x.route_list.get(i).dronePrev.size());
+		while (true) {
+			boolean improved = false;
+			for (Integer c: inst.vec_droneable_poi_id) {
+				//remove
+				Solution sol_x = new Solution(sol);
+				Route to_lookfor = sol_x.route_list.get(sol_x.belongTo.get(c));
+				if (to_lookfor.droneNext.get(c) == null && to_lookfor.dronePrev.get(c) == null) {
+					to_lookfor.removeElement(c);
+					sol_x.belongTo.set(c, -1);
+					//find
+					Sortie bestSortie = neighborhood.FindSortie(c, sol_x, sol.t_cost);
+					if (bestSortie != null) {
+						//update
+						System.out.println("Find sortie: " + bestSortie.launch_position + ", " + bestSortie.delivery_position + ", " + bestSortie.recovery_position);
+						int routeId = sol_x.belongTo.get(bestSortie.launch_position);
+						sol_x.route_list.get(routeId).insertDrone(bestSortie);
+						sol_x.belongTo.set(c, routeId);
+						sol = sol_x;
+						improved = true;
 					}
-					sol = sol_x;
 				}
+			}
+			if (improved == false) {
+				break;
 			}
 		}
 	}

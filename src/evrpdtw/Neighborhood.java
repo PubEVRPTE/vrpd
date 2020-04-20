@@ -8,7 +8,7 @@ public class Neighborhood {
 	public static final int c_low_lb = 1;
 	public static final int c_low_ub = 3;
 	public static final int c_high = 40;
-	public static final double delta = 0.1;
+	public static final double delta = 0.15;
 	public static final Random random = new Random();
 
 	public static final double overflow_cent = 0.1;
@@ -44,7 +44,7 @@ public class Neighborhood {
 	}
 
 	public int getBeta() {
-		return Math.max(Math.max(random.nextInt(c_low_ub) + c_low_lb, (int) Math.round(delta * inst.c_n)), c_high);
+		return Math.min(Math.max(random.nextInt(c_low_ub) + c_low_lb, (int) Math.round(delta * inst.c_n)), Math.min(inst.c_n - 1, c_high));
 	}
 
 	public ArrayList<Integer> destroy1(Solution sol, int beta) {
@@ -361,51 +361,39 @@ public class Neighborhood {
 			Route r = s.route_list.get(r_index);
 			if (r.weight + inst.vec_poi.get(c).pack_weight < inst.v_weight_drone) {
 				int r_n = r.vehicleRoute.size();
+				boolean depart = false;
 				for (int i = 0; i < r_n - 1; i++) {
-					for (int k = i + 1; k < r_n; k++) {
-						int launch_id = r.vehicleRoute.get(i);
-						int recovery_id = r.vehicleRoute.get(k);
-						Sortie p = new Sortie(launch_id, c, recovery_id);
-						double drone_distance = inst.distance[launch_id][c] + inst.distance[c][recovery_id];
-						double drone_time = inst.d_serviceTime + drone_distance / inst.d_speed;
-						double new_cost = r.cost + drone_distance * inst.d_cost;
-						if (new_cost < thresholdCost && drone_time <= inst.d_time) {
-							boolean depart = false;
-							for (int ii = i; ii >= 0; ii--) {
-								if (r.droneNext.get(r.vehicleRoute.get(ii)) != null) {
-									depart = true;
-									break;
-								} else if (r.droneNext.get(r.vehicleRoute.get(ii)) == null
-										&& r.dronePrev.get(r.vehicleRoute.get(ii)) != null) {
-									break;
-								}
+					int launch_id = r.vehicleRoute.get(i);
+					if (i > 0 && r.dronePrev.get(launch_id) != null) {
+						depart = false;
+					}
+					if (r.droneNext.get(launch_id) != null) {
+						depart = true;
+					}
+					if (!depart) {
+						// 从这个点开始到下一次起飞中间所有的点都可以作为降落点
+						for (int k = i + 1; k < r_n; k++) {
+							int recovery_id = r.vehicleRoute.get(k);
+							if (r.droneNext.get(recovery_id) != null) {
+								break;
 							}
-							for (int kk = k; kk < r_n; kk++) {
-								if (r.droneNext.get(r.vehicleRoute.get(kk)) == null) {
-									depart = true;
-									break;
-								} else if (r.droneNext.get(r.vehicleRoute.get(kk)) != null
-										&& r.dronePrev.get(r.vehicleRoute.get(kk)) == null) {
-									break;
-								}
-							}
-							if (!depart) {
-								double vehicle_time = inst.distance[i][i + 1] / inst.v_speed;
-								int tmp = i + 1;
-								while (tmp < k) {
-									vehicle_time += inst.v_serviceTime + inst.distance[tmp][tmp + 1] / inst.v_speed;
-									tmp++;
-								}
-								if (r.time + inst.l_t + inst.r_t + Math.max(vehicle_time, drone_time)
-										- vehicle_time <= inst.v_time
-										&& r.cost + drone_distance * inst.d_cost < thresholdCost) {
-									BestSortie = p;
-									thresholdCost = r.cost + drone_distance * inst.d_cost;
+							// 检查时间合法
+							if ((inst.distance[launch_id][c] + inst.distance[c][recovery_id]) / inst.d_speed + inst.d_serviceTime
+									+ inst.l_t <= inst.d_time) {
+								Route newRoute = new Route(r);
+								newRoute.droneNext.put(launch_id, c);
+								newRoute.droneNext.put(c, recovery_id);
+								newRoute.dronePrev.put(c, launch_id);
+								newRoute.dronePrev.put(recovery_id, c);
+								newRoute.calculate_cost(inst);
+								if (newRoute.time < inst.v_time && s.t_cost + (inst.distance[launch_id][c] + inst.distance[c][recovery_id]) * inst.d_cost < thresholdCost) {
+									BestSortie = new Sortie(launch_id, c, recovery_id);
+									thresholdCost = s.t_cost + (inst.distance[launch_id][c] + inst.distance[c][recovery_id]) * inst.d_cost;
 								}
 							}
 						}
-
 					}
+					
 				}
 			}
 		}
@@ -466,59 +454,45 @@ public class Neighborhood {
 
 	// 弱化版的FindSortie
 	public Sortie FindSortie_w(int c, Solution s, double thresholdCost) {
+		thresholdCost *= (1 + overflow_cent);
 		Sortie BestSortie = null;
 		for (int r_index = 0; r_index < s.route_list.size(); r_index++) {
 			Route r = s.route_list.get(r_index);
 			if (r.weight + inst.vec_poi.get(c).pack_weight < inst.v_weight_drone) {
 				int r_n = r.vehicleRoute.size();
+				boolean depart = false;
 				for (int i = 0; i < r_n - 1; i++) {
-					for (int k = i + 1; k < r_n; k++) {
-						int launch_id = r.vehicleRoute.get(i);
-						int recovery_id = r.vehicleRoute.get(k);
-						Sortie p = new Sortie(launch_id, c, recovery_id);
-						double drone_distance = inst.distance[launch_id][c] + inst.distance[c][recovery_id];
-						double drone_time = inst.d_serviceTime + drone_distance / inst.d_speed;
-						double new_cost = r.cost + drone_distance * inst.d_cost;
-						if (new_cost < thresholdCost * (1 + overflow_cent) && drone_time <= inst.d_time) {
-							boolean depart = false;
-							for (int ii = i; ii >= 0; ii--) {
-								if (r.droneNext.get(r.vehicleRoute.get(ii)) != null
-										&& r.dronePrev.get(r.vehicleRoute.get(ii)) == null) {
-									depart = true;
-									break;
-								} else if (r.droneNext.get(r.vehicleRoute.get(ii)) == null
-										&& r.dronePrev.get(r.vehicleRoute.get(ii)) != null) {
-									break;
-								}
+					int launch_id = r.vehicleRoute.get(i);
+					if (i > 0 && r.dronePrev.get(launch_id) != null) {
+						depart = false;
+					}
+					if (r.droneNext.get(launch_id) != null) {
+						depart = true;
+					}
+					if (!depart) {
+						// 从这个点开始到下一次起飞中间所有的点都可以作为降落点
+						for (int k = i + 1; k < r_n; k++) {
+							int recovery_id = r.vehicleRoute.get(k);
+							if (r.droneNext.get(recovery_id) != null) {
+								break;
 							}
-							for (int kk = k; kk < r_n; kk++) {
-								if (r.droneNext.get(r.vehicleRoute.get(kk)) == null
-										&& r.dronePrev.get(r.vehicleRoute.get(kk)) != null) {
-									depart = true;
-									break;
-								} else if (r.droneNext.get(r.vehicleRoute.get(kk)) != null
-										&& r.dronePrev.get(r.vehicleRoute.get(kk)) == null) {
-									break;
-								}
-							}
-							if (!depart) {
-								double vehicle_time = inst.distance[i][i + 1] / inst.v_speed;
-								int tmp = i + 1;
-								while (tmp < k) {
-									vehicle_time += inst.v_serviceTime + inst.distance[tmp][tmp + 1] / inst.v_speed;
-									tmp++;
-								}
-								if (r.time + inst.l_t + inst.r_t + Math.max(vehicle_time, drone_time)
-										- vehicle_time <= inst.v_time
-										&& r.cost + drone_distance * inst.d_cost < thresholdCost
-												* (1 + overflow_cent)) {
-									BestSortie = p;
-									thresholdCost = r.cost + drone_distance * inst.d_cost;
+							// 检查时间合法
+							if ((inst.distance[launch_id][c] + inst.distance[c][recovery_id]) / inst.d_speed + inst.d_serviceTime
+									+ inst.l_t <= inst.d_time) {
+								Route newRoute = new Route(r);
+								newRoute.droneNext.put(launch_id, c);
+								newRoute.droneNext.put(c, recovery_id);
+								newRoute.dronePrev.put(c, launch_id);
+								newRoute.dronePrev.put(recovery_id, c);
+								newRoute.calculate_cost(inst);
+								if (newRoute.time < inst.v_time && s.t_cost + (inst.distance[launch_id][c] + inst.distance[c][recovery_id]) * inst.d_cost < thresholdCost) {
+									BestSortie = new Sortie(launch_id, c, recovery_id);
+									thresholdCost = s.t_cost + (inst.distance[launch_id][c] + inst.distance[c][recovery_id]) * inst.d_cost;
 								}
 							}
 						}
-
 					}
+					
 				}
 			}
 		}
@@ -533,7 +507,7 @@ public class Neighborhood {
 		// 合法性检查: 卡车超重
 		double weight = inst.vec_poi.get(c).pack_weight;
 		if (weight + route.weight < inst.v_weight_drone) {
-			boolean droneAvailable = (route.droneNext.get(0) == null);
+			boolean droneAvailable = true;
 			for (int i = 0; i < route.vehicleRoute.size(); i++) {
 				int id = route.vehicleRoute.get(i);
 				if (id > 0) {
@@ -549,10 +523,10 @@ public class Neighborhood {
 					}
 				}
 
-				if (route.dronePrev.get(id) != null) {
+				if (i > 0 && route.dronePrev.get(id) != null) {
 					droneAvailable = true;
 				}
-				if (route.droneNext.get(id) != null) {
+				if (i < route.vehicleRoute.size() - 1 && route.droneNext.get(id) != null) {
 					droneAvailable = false;
 				}
 				
@@ -567,7 +541,7 @@ public class Neighborhood {
 						}
 						// 合法性检查: 时间
 						if ((inst.distance[id][c] + inst.distance[c][landId]) / inst.d_speed + inst.d_serviceTime
-								+ inst.l_t < inst.d_time) {
+								+ inst.l_t <= inst.d_time) {
 							Route newRoute = new Route(route);
 							newRoute.droneNext.put(id, c);
 							newRoute.droneNext.put(c, landId);
