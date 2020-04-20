@@ -1,0 +1,35 @@
+The following instances are originally presented in the (soon to be published) paper An Adaptive Large Neighborhood Search Metaheuristic for the Vehicle Routing Problem with Drones, written by David Sacramento Lechado, David Pisinger and Stefan Røpke.
+
+The data correspond to 112 instances corresponding to different scenarios for the Vehicle Routing Problem with Drones. Each instance is named n.m.t, where n is the number of customers in the scenario, m is the dimension of the grid, and t is the generic name of the scenario. Moreover, the data additionally contains 10 clustered instances, named n.m.c.t, where c refers to the cluster-feature of the instance, 100 instances for the sensitivity analysis, named n.m.s.t, where s stands for sensitivity, and 375 instances for the experiments with drone savings as function of grid size, named n.m.g.t.
+
+The first line of each instance file indicates the number of customers in the specific instance. The second line is the header for the characteristics of each customer, where it is written Coordinate X, Coordinate Y and Demand. The following provides the previous information for each customer in the instance.
+
+
+
+Finally, there is an extra file, named RouteData, which provides information about the value of the parameters in the main configuration of the problem. These parameters are:
+
+
+
+TruckSpeed: Speed in mpm (miles per minute) of the trucks.
+
+DroneSpeed: Speed in mpm of the drones.
+
+TruckCapacity: Maximum capacity of the trucks.
+
+DroneCapacity: Maximum allowed weight a drone can carry.
+
+ServiceTimeTruck: Required service time for a truck to service a customer.
+
+ServiceTimeDrone: Required service time for a drone to service a customer.
+
+Endurance: Maximum flight endurance of the battery of the drone.
+
+MaximumDriveTime: Maximum duration time of the routes.
+
+LaunchTime: Required time for launching a drone.
+
+RecoveryTime: Required time for recovering a drone.
+
+CostFactor: Corresponding parameter for computing the cost for a truck for traversing arc (i,j), given by fuel price (euro/liter), consumption rate (liter/km) and miles converter (km/miles).
+
+DroneFactor: Corresponding parameter for computing the cost for a drone for traversing arc (i,j) with respect to the truck cost.

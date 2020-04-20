@@ -10,7 +10,7 @@ public class Test {
 		// Currently just solve it multiple times
 		// Serves to find solution inconsistenciess
 		String r_f_n = "RouteData.txt";
-		String p_f_n = "150.30.c.01.txt";
+		String p_f_n = "instances/Instances/150.30.01.txt";
 		for (int i = 0; i < 20; i++) {
 			Problem inst = new Problem();
 			inst.load_instance(r_f_n, p_f_n);

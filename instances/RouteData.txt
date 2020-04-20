@@ -1,0 +1,13 @@
+TruckSpeed 35/60.0
+DroneSpeed 50/60.0
+TruckCapacityWithDrones 1300
+TruckCapacityWithoutDrones 1400
+DroneCapacity 5
+ServiceTimeTruck 2
+ServiceTimeDrone 1
+Endurance 30
+MaxDriveTime 8*60
+LaunchTime 1
+RecoveryTime 1
+CostFactor 1.13*1.61*(7/100.0)
+DroneFactorCost 0.1

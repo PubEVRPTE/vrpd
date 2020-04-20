@@ -97,7 +97,7 @@ public class Problem {
 		scan1.next();l_t = scan1.nextInt();
 		scan1.next();r_t = scan1.nextInt();
 		scan1.next();v_cost = scan1.nextDouble();
-		scan1.next();d_cost = scan1.nextDouble();
+		scan1.next();d_cost = scan1.nextDouble() * v_cost;
 		scan1.close();
 		
 		

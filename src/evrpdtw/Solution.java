@@ -54,10 +54,10 @@ public class Solution {
 			ArrayList<Integer> vehicleRoute = route.vehicleRoute;
 			boolean droneAvailable = true;
 			
-			for (int i = 1; i < vehicleRoute.size(); i++) {
+			for (int i = 0; i < vehicleRoute.size(); i++) {
 				// 无人机是否合法
 				Integer id = vehicleRoute.get(i);
-				if (route.dronePrev.get(id) != null) { // 接收无人机
+				if (i > 0 && route.dronePrev.get(id) != null) { // 接收无人机
 					if (droneAvailable == true) {
 						throw new RuntimeException("Invalid solution: Duplicate drone landing.");
 					}
@@ -65,14 +65,14 @@ public class Solution {
 				}
 				// 发送无人机
 				Integer drone = route.droneNext.get(id);
-				if (drone != null) {
+				if (i < vehicleRoute.size() - 1 && drone != null) {
 					if (droneAvailable == false) {
 						throw new RuntimeException("Invalid solution: Drone departs while there's actually no drone available.");
 					}
 					Integer droneLanding = route.droneNext.get(drone);
 					if (droneLanding == null) {
 						throw new RuntimeException("Invalid solution: Drone route broken - it never lands.");
-					} else if ((inst.distance[i][drone] + inst.distance[drone][droneLanding]) / inst.d_speed + inst.d_serviceTime + inst.l_t > inst.d_time) {
+					} else if ((inst.distance[id][drone] + inst.distance[drone][droneLanding]) / inst.d_speed + inst.d_serviceTime + inst.l_t > inst.d_time) {
 						throw new RuntimeException("Invalid solution: Drone departs for infeasible place.");
 					}
 					if (!route.dronePrev.get(drone).equals(id) || !route.dronePrev.get(droneLanding).equals(drone)) {
