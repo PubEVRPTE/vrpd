@@ -5,13 +5,10 @@ import java.util.*;
 public class Neighborhood {
 
 	// destroy方法中确定beta的参数
-	public static final int c_low_lb = 1;
-	public static final int c_low_ub = 3;
-	public static final int c_high = 40;
-	public static final double delta = 0.15;
+	public static final int c_high = 30;
 	public static final Random random = new Random();
 
-	public static final double overflow_cent = 0.1;
+	public static final double overflow_cent = 0.05;
 
 	public Problem inst;
 
@@ -40,11 +37,15 @@ public class Neighborhood {
 			repair4(sol, to_insert);
 		}
 		
-		sol.check(inst); // 调试检查正确性用，没问题就注释掉
+		// sol.check(inst); // 调试检查正确性用，没问题就注释掉
 	}
 
+	public void localSearch(Solution sol) {
+		while (twoOpt(sol) || twoOptStar(sol)) {}
+	}
+	
 	public int getBeta() {
-		return Math.min(Math.max(random.nextInt(c_low_ub) + c_low_lb, (int) Math.round(delta * inst.c_n)), Math.min(inst.c_n - 1, c_high));
+		return random.nextInt(c_high) + 1;
 	}
 
 	public ArrayList<Integer> destroy1(Solution sol, int beta) {
@@ -219,7 +220,7 @@ public class Neighborhood {
 			int id = random.nextInt(copyCus.size()-1) + 1;
 			poi current = copyCus.remove(id);
 			Route route = newSolution.route_list.get(newSolution.belongTo.get(id));
-			if (current.pack_weight < inst.d_weight && route.droneNext.get(id) == null && route.dronePrev.get(id) == null) {
+			if (current.pack_weight <= inst.d_weight && route.droneNext.get(id) == null && route.dronePrev.get(id) == null) {
 				double threshold = newSolution.t_cost;
 				route.removeElement(id);
 				newSolution.belongTo.set(id, -1);
@@ -249,7 +250,7 @@ public class Neighborhood {
 			int id = random.nextInt(copyCus.size()-1) + 1;
 			poi current = copyCus.remove(id);
 			Route route = newSolution.route_list.get(newSolution.belongTo.get(id));
-			if (current.pack_weight < inst.d_weight && route.droneNext.get(id) == null && route.dronePrev.get(id) == null) {
+			if (current.pack_weight <= inst.d_weight && route.droneNext.get(id) == null && route.dronePrev.get(id) == null) {
 				double threshold = newSolution.t_cost;
 				route.removeElement(id);
 				newSolution.belongTo.set(id, -1);
@@ -359,7 +360,7 @@ public class Neighborhood {
 		Sortie BestSortie = null;
 		for (int r_index = 0; r_index < s.route_list.size(); r_index++) {
 			Route r = s.route_list.get(r_index);
-			if (r.weight + inst.vec_poi.get(c).pack_weight < inst.v_weight_drone) {
+			if (r.weight + inst.vec_poi.get(c).pack_weight <= inst.v_weight_drone) {
 				int r_n = r.vehicleRoute.size();
 				boolean depart = false;
 				for (int i = 0; i < r_n - 1; i++) {
@@ -458,7 +459,7 @@ public class Neighborhood {
 		Sortie BestSortie = null;
 		for (int r_index = 0; r_index < s.route_list.size(); r_index++) {
 			Route r = s.route_list.get(r_index);
-			if (r.weight + inst.vec_poi.get(c).pack_weight < inst.v_weight_drone) {
+			if (r.weight + inst.vec_poi.get(c).pack_weight <= inst.v_weight_drone) {
 				int r_n = r.vehicleRoute.size();
 				boolean depart = false;
 				for (int i = 0; i < r_n - 1; i++) {
@@ -506,7 +507,7 @@ public class Neighborhood {
 		double cost = Double.MAX_VALUE;
 		// 合法性检查: 卡车超重
 		double weight = inst.vec_poi.get(c).pack_weight;
-		if (weight + route.weight < inst.v_weight_drone) {
+		if (weight + route.weight <= inst.v_weight_drone) {
 			boolean droneAvailable = true;
 			for (int i = 0; i < route.vehicleRoute.size(); i++) {
 				int id = route.vehicleRoute.get(i);
@@ -532,7 +533,7 @@ public class Neighborhood {
 				
 				// 无人机插入
 				// 合法性检查: 超重
-				if (weight < inst.d_weight && droneAvailable) {
+				if (weight <= inst.d_weight && droneAvailable) {
 					// 枚举所有从此出发的无人机路径
 					for (int landIdx = i + 1; landIdx < route.vehicleRoute.size(); landIdx++) {
 						int landId = route.vehicleRoute.get(landIdx);
@@ -573,5 +574,196 @@ public class Neighborhood {
 			route.calculate_cost(inst);
 		}
 		return success;
+	}
+
+	public boolean twoOpt(Solution sol) {
+		for (Route route: sol.route_list) {
+			boolean droneAvailable = true;
+			ArrayList<Boolean> droneAvailableArr = new ArrayList<Boolean>();
+			for (int i = 0; i < route.vehicleRoute.size() - 2; i++) {
+				int id = route.vehicleRoute.get(i);
+
+				if (i > 0 && route.dronePrev.get(id) != null) {
+					droneAvailable = true;
+				}
+				if (route.droneNext.get(id) != null) {
+					droneAvailable = false;
+				}
+
+				droneAvailableArr.add(droneAvailable);
+			}
+			// 起始点无人机均无参与
+			for (int i = 0; i < route.vehicleRoute.size() - 4; i++) {
+				if (droneAvailableArr.get(i)) {
+					for (int j = i + 2; j < route.vehicleRoute.size() - 2; j++) {
+						if (droneAvailableArr.get(j)) {
+							int x1 = route.vehicleRoute.get(i), x2 = route.vehicleRoute.get(i+1);
+							int y1 = route.vehicleRoute.get(j), y2 = route.vehicleRoute.get(j+1);
+							double diff = inst.distance[x1][y1] + inst.distance[x2][y2] - inst.distance[x1][x2] - inst.distance[y1][y2];
+							if (diff < 0) {
+								// 无人机的起终点要更改
+								HashMap<Integer, Integer> newDroneNext = new HashMap<Integer, Integer>(route.droneNext);
+								HashMap<Integer, Integer> newDronePrev = new HashMap<Integer, Integer>(route.dronePrev);
+								for (int k = i + 1; k < j + 1; k++) {
+									int id = route.vehicleRoute.get(k);
+									Integer drone = route.dronePrev.get(id);
+									if (drone != null) {
+										int depart = route.dronePrev.get(drone);
+										newDroneNext.remove(depart);
+										newDroneNext.remove(drone);
+										newDronePrev.remove(drone);
+										newDronePrev.remove(id);
+									}
+								}
+								for (int k = i + 1; k < j + 1; k++) {
+									int id = route.vehicleRoute.get(k);
+									Integer drone = route.dronePrev.get(id);
+									if (drone != null) {
+										int depart = route.dronePrev.get(drone);
+										newDroneNext.put(id, drone);
+										newDroneNext.put(drone, depart);
+										newDronePrev.put(depart, drone);
+										newDronePrev.put(drone, id);
+									}
+								}
+								route.droneNext = newDroneNext;
+								route.dronePrev = newDronePrev;
+								Collections.reverse(route.vehicleRoute.subList(i+1, j+1));
+								route.calculate_cost(inst);
+								return true;
+							}
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	// public void twoOptStar(Solution sol) {
+	// 	while (_twoOptStar(sol)) {}
+	// }
+
+	public boolean twoOptStar(Solution sol) {
+		for (int i = 0; i < sol.route_list.size(); i++) {
+			Route r1 = sol.route_list.get(i);
+			// 计算第一条路的无人机可用性
+			boolean droneAvailable = true;
+			ArrayList<Integer> droneAvailableIdx1 = new ArrayList<Integer>();
+			for (int j = 0; j < r1.vehicleRoute.size() - 2; j++) {
+				int id = r1.vehicleRoute.get(j);
+
+				if (j > 0 && r1.dronePrev.get(id) != null) {
+					droneAvailable = true;
+				}
+				if (r1.droneNext.get(id) != null) {
+					droneAvailable = false;
+				}
+
+				if (j > 0 && droneAvailable) {
+					droneAvailableIdx1.add(j);
+				}
+			}
+			for (int p = i + 1; p < sol.route_list.size(); p++) {
+				Route r2 = sol.route_list.get(p);
+				droneAvailable = true;
+				for (int k = 0; k < r2.vehicleRoute.size() - 2; k++) {
+					int id2 = r2.vehicleRoute.get(k);
+	
+					if (k > 0 && r2.dronePrev.get(id2) != null) {
+						droneAvailable = true;
+					}
+					if (r2.droneNext.get(id2) != null) {
+						droneAvailable = false;
+					}
+					
+					if (k > 0 && droneAvailable) {
+						for (int j: droneAvailableIdx1) {
+							int id1 = r1.vehicleRoute.get(j);
+							int x1 = r1.vehicleRoute.get(j), x2 = r1.vehicleRoute.get(j+1);
+							int y1 = r2.vehicleRoute.get(k), y2 = r2.vehicleRoute.get(k+1);
+							// 计算调整后时间
+							double t1 = r1.cumulatedTime.get(id1);
+							double t2 = r2.cumulatedTime.get(id2);
+							double newT1 = r2.cumulatedTime.get(0) - t2 + t1 + (inst.distance[x1][y2] - inst.distance[y1][y2]) / inst.v_speed;
+							double newT2 = r1.cumulatedTime.get(0) - t1 + t2 + (inst.distance[y1][x2] - inst.distance[x1][x2]) / inst.v_speed;
+							double newW1 = r2.cumulatedWeight.get(0) - r2.cumulatedWeight.get(id2) + r1.cumulatedWeight.get(id1);
+							double newW2 = r1.cumulatedWeight.get(0) - r1.cumulatedWeight.get(id1) + r2.cumulatedWeight.get(id2);
+							double diff = inst.distance[x1][y2] + inst.distance[y1][x2] - inst.distance[y1][y2] - inst.distance[x1][x2];
+							if (diff < 0 && newT1 < inst.v_time && newT2 < inst.v_time && newW1 < inst.v_weight_drone && newW2 < inst.v_weight_drone) {
+								Route newR1 = new Route(r1), newR2 = new Route(r2);
+								// 无人机路径交换
+								// 必须先两个for删除再两个for加入，否则在depot起落的无人机会有奇怪的特殊情况
+								for (int r = j + 1; r < r1.vehicleRoute.size(); r++) {
+									int id = r1.vehicleRoute.get(r);
+									Integer drone = r1.dronePrev.get(id);
+									if (drone != null) {
+										int depart = r1.dronePrev.get(drone);
+										newR1.dronePrev.remove(id);
+										newR1.dronePrev.remove(drone);
+										newR1.droneNext.remove(drone);
+										newR1.droneNext.remove(depart);
+									}
+								}
+								for (int r = k + 1; r < r2.vehicleRoute.size(); r++) {
+									int id = r2.vehicleRoute.get(r);
+									Integer drone = r2.dronePrev.get(id);
+									if (drone != null) {
+										int depart = r2.dronePrev.get(drone);
+										newR2.dronePrev.remove(id);
+										newR2.dronePrev.remove(drone);
+										newR2.droneNext.remove(drone);
+										newR2.droneNext.remove(depart);
+									}
+								}
+
+								for (int r = j + 1; r < r1.vehicleRoute.size(); r++) {
+									int id = r1.vehicleRoute.get(r);
+									Integer drone = r1.dronePrev.get(id);
+									if (drone != null) {
+										int depart = r1.dronePrev.get(drone);
+										newR2.dronePrev.put(id, drone);
+										newR2.dronePrev.put(drone, depart);
+										newR2.droneNext.put(depart, drone);
+										newR2.droneNext.put(drone, id);
+										sol.belongTo.set(drone, p);
+									}
+								}
+								for (int r = k + 1; r < r2.vehicleRoute.size(); r++) {
+									int id = r2.vehicleRoute.get(r);
+									Integer drone = r2.dronePrev.get(id);
+									if (drone != null) {
+										int depart = r2.dronePrev.get(drone);
+										newR1.dronePrev.put(id, drone);
+										newR1.dronePrev.put(drone, depart);
+										newR1.droneNext.put(depart, drone);
+										newR1.droneNext.put(drone, id);
+										sol.belongTo.set(drone, i);
+									}
+								}
+								// 车辆路径交换
+								for (int id: r1.vehicleRoute.subList(j + 1, r1.vehicleRoute.size())) {
+									sol.belongTo.set(id, p);
+								}
+								for (int id: r2.vehicleRoute.subList(k + 1, r2.vehicleRoute.size())) {
+									sol.belongTo.set(id, i);
+								}
+								newR1.vehicleRoute.subList(j + 1, newR1.vehicleRoute.size()).clear();
+								newR1.vehicleRoute.addAll(r2.vehicleRoute.subList(k + 1, r2.vehicleRoute.size()));
+								newR2.vehicleRoute.subList(k + 1, newR2.vehicleRoute.size()).clear();
+								newR2.vehicleRoute.addAll(r1.vehicleRoute.subList(j + 1, r1.vehicleRoute.size()));
+								newR1.calculate_cost(inst);
+								newR2.calculate_cost(inst);
+								sol.route_list.set(i, newR1);
+								sol.route_list.set(p, newR2);
+								// sol.check(inst);
+								return true;
+							}
+						}
+					}
+				}
+			}
+		}
+		return false;
 	}
 }

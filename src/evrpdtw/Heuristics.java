@@ -27,8 +27,9 @@ public class Heuristics {
 	
 	// solve方法中的参数
 	public static final double timeLimit = 300;
-	public static final double maxTemperatureRatio = 0.004;
-	public static final int maxNoImpv = 1000;
+	public static final double maxTemperatureRatio = 1e-10;
+	public static final int maxNoImpv = 50;
+
 	public long timeStart;
 	
 	public ArrayList<Integer> vec_poi_id;//not cover depot
@@ -62,17 +63,22 @@ public class Heuristics {
 		bestSolution = sol;
 		System.out.println("Initial: " + bestSolution.t_cost);
 		timerOn();
-		int iter = 0;
+		int iter = 1;
 		int noImpv = 0;
 
 		double maxTemperature = maxTemperatureRatio * sol.t_cost;
 
 		while (timeout() == false) {
+
 			Solution newSolution = new Solution(sol);
 			ArrayList<Integer> to_insert = neighborhood.destroy(newSolution);
+			
 			neighborhood.repair(newSolution, to_insert);
+			neighborhood.localSearch(newSolution);
+			newSolution.check(inst);
 
 			double temperature = maxTemperature * (time() / timeLimit);
+			
 			if (random.nextDouble() < Math.exp((sol.t_cost - newSolution.t_cost) / temperature)) {
 				sol = newSolution;
 			}
@@ -89,14 +95,64 @@ public class Heuristics {
 				}
 			}
 
-			// TODO: 自适应
-
 			iter++;
 		}
 		System.out.println("Best: " + bestSolution.t_cost + ", time: " + time());
 	}
 	
 	public void nearest_neighbor() {
+		// int route_index = 0;
+		// while (!vec_poi_id.isEmpty()) {
+		// 	Route r = new Route(inst);
+		// 	r.vehicleRoute.add(inst.vec_poi.get(0).id);
+		// 	int lastId = inst.vec_poi.get(0).id;
+		// 	while (!vec_poi_id.isEmpty()) {
+		// 		double mindist = Double.MAX_VALUE;
+		// 		int mini = -1;
+		// 		int minid = -1;
+		// 		double add_weight = 0;
+		// 		double add_time = 0;
+		// 		for (int i = 0; i < vec_poi_id.size(); i++) {
+		// 			int id = vec_poi_id.get(i);
+		// 			if (inst.distance[lastId][id] < mindist) {
+		// 				add_weight = inst.vec_poi.get(id).pack_weight;
+		// 				add_time = inst.vec_poi.get(id).v_serviceTime
+		// 						+ inst.distance[lastId][id] / inst.v_speed;
+		// 				if (r.weight + add_weight <= inst.v_weight_drone && r.time + add_time <= inst.v_time) {
+		// 					mindist = inst.distance[lastId][id];
+		// 					minid = id;
+		// 					mini = i;
+		// 				}
+		// 			}
+		// 		}
+				
+		// 		if (minid != -1 && r.weight + add_weight <= inst.v_weight_drone && r.time + add_time + inst.distance[minid][inst.vec_poi.get(0).id] / inst.v_speed <= inst.v_time) {
+		// 			r.vehicleRoute.add(minid);
+		// 			r.weight += add_weight;
+		// 			r.time += add_time;
+		// 			r.cost += mindist * inst.v_cost;
+		// 			vec_poi_id.remove(mini);
+		// 			sol.belongTo.set(minid, route_index);
+		// 			lastId = minid;
+		// 		}
+		// 		else {
+		// 			break;
+		// 		}
+
+		// 	}
+			
+		// 	double dist = inst.distance[r.vehicleRoute.get(r.vehicleRoute.size() - 1)][inst.vec_poi.get(0).id];
+		// 	r.vehicleRoute.add(inst.vec_poi.get(0).id);
+		// 	r.time += dist / inst.v_speed;
+		// 	r.cost += dist * inst.v_cost;
+
+		// 	sol.route_list.add(r);
+		// 	sol.time += r.time;
+		// 	sol.t_cost += r.cost;
+		// 	sol.t_weight += r.weight;
+		// 	route_index++;
+		// }
+
 		//greedy
 		
 		int route_index = 0;

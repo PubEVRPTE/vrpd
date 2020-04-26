@@ -16,6 +16,9 @@ public class Route{
 	
 	public HashMap<Integer, Integer> droneNext;
 	public HashMap<Integer, Integer> dronePrev;
+
+	ArrayList<Double> cumulatedTime;
+	ArrayList<Double> cumulatedWeight;
 	
 	public Route(Problem inst) {
 		cost = 0;
@@ -23,10 +26,12 @@ public class Route{
 		time = 0;
 		depart = false;
 		change = false;
+		this.inst = inst;
 		vehicleRoute = new ArrayList<Integer>();
 		droneNext = new HashMap<Integer, Integer>();
 		dronePrev = new HashMap<Integer, Integer>();
-		this.inst = inst;
+		cumulatedTime = new ArrayList<Double>(Collections.nCopies(inst.c_n + 1, 0.0));
+		cumulatedWeight = new ArrayList<Double>(Collections.nCopies(inst.c_n + 1, 0.0));
 	}
 	
 	public Route(Route r) {
@@ -35,16 +40,19 @@ public class Route{
 		time = r.time;
 		depart = r.depart;
 		change = r.change;
+		inst = r.inst;
 		vehicleRoute = new ArrayList<Integer>(r.vehicleRoute);
 		droneNext = new HashMap<Integer, Integer>(r.droneNext);
 		dronePrev = new HashMap<Integer, Integer>(r.dronePrev);
-		inst = r.inst;
+		cumulatedTime = new ArrayList<Double>(Collections.nCopies(inst.c_n + 1, 0.0));
+		cumulatedWeight = new ArrayList<Double>(Collections.nCopies(inst.c_n + 1, 0.0));
 	}
 
 	public void calculate_cost(Problem inst) {
 		cost = 0;
 		weight = 0;
-		ArrayList<Double> cumulatedTime = new ArrayList<Double>(Collections.nCopies(inst.c_n + 1, 0.0));
+		cumulatedTime = new ArrayList<Double>(Collections.nCopies(inst.c_n + 1, 0.0));
+		cumulatedWeight = new ArrayList<Double>(Collections.nCopies(inst.c_n + 1, 0.0));
 		int id = vehicleRoute.get(0);
 		int prevId;
 		for (int i = 1; i < vehicleRoute.size(); i++) {
@@ -70,6 +78,7 @@ public class Route{
 			cost += inst.v_cost * inst.distance[prevId][id];
 			cumulatedTime.set(id, Math.max(cumulatedTime.get(prevId) + vehicleTime + operationTime, cumulatedTime.get(id)));
 			weight += inst.vec_poi.get(id).pack_weight;
+			cumulatedWeight.set(id, weight);
 		}
 		time = cumulatedTime.get(0);
 		change = false;

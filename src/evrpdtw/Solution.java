@@ -35,6 +35,7 @@ public class Solution {
 	
 	public void calculate_cost(Problem inst) {
 		t_cost = 0;
+		t_weight = 0;
 		time = 0;
 		for (Route route: route_list) {
 			route.calculate_cost(inst);
