@@ -44,10 +44,10 @@ public class EVRPDTW {
                 new OutputStreamWriter(new FileOutputStream(path,true)));
 		
 		for(int i = 0; i < heur.sol.route_list.size(); i++) {
-			for(int j = 0; j < heur.sol.route_list.get(i).droneNext.size(); j++) {
-				if(heur.sol.route_list.get(i).droneNext.get(j) != null && heur.sol.route_list.get(i).dronePrev.get(j) != null)
-					out1.write(heur.sol.route_list.get(i).droneNext.get(j)+" "+j+" "+heur.sol.route_list.get(i).dronePrev.get(j)+"\r\n");
-			}
+			for(Integer key:heur.sol.route_list.get(i).droneNext.keySet()){
+				if(heur.sol.route_list.get(i).droneNext.get(key) != null && heur.sol.route_list.get(i).dronePrev.get(heur.sol.route_list.get(i).droneNext.get(key)) != null)
+					out1.write(key+" "+heur.sol.route_list.get(i).droneNext.get(key)+" "+heur.sol.route_list.get(i).dronePrev.get(heur.sol.route_list.get(i).droneNext.get(key))+"\r\n");
+		     		    }
 		}
 		out1.close();
         
