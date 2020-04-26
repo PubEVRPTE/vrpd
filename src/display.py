@@ -39,13 +39,13 @@ screen.fill([255, 255, 255])
 for route in vehicleRoute:
     Route = []
     for poi in route:
-        screen.set_at(pos[poi], [255, 0, 0])
+        pygame.draw.circle(screen, [0, 0, 0], pos[poi], 4, 1)
         Route.append(pos[poi])
     pygame.draw.lines(screen, [0, 0, 0], True, Route, 1)
 
 for poi in droneRoute:
     Route = []
-    screen.set_at(pos[poi[1]], [0, 0, 255])
+    pygame.draw.circle(screen, [0, 0, 0], pos[poi[1]], 4, 1)
     for i in poi:
         Route.append(pos[i])
     pygame.draw.lines(screen, [0, 255, 0], False, Route, 1)
@@ -55,4 +55,3 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
-
