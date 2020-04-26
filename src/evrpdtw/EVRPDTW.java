@@ -45,8 +45,8 @@ public class EVRPDTW {
 		
 		for(int i = 0; i < heur.sol.route_list.size(); i++) {
 			for(Integer key:heur.sol.route_list.get(i).droneNext.keySet()){
-				if(heur.sol.route_list.get(i).droneNext.get(key) != null && heur.sol.route_list.get(i).dronePrev.get(heur.sol.route_list.get(i).droneNext.get(key)) != null)
-					out1.write(key+" "+heur.sol.route_list.get(i).droneNext.get(key)+" "+heur.sol.route_list.get(i).dronePrev.get(heur.sol.route_list.get(i).droneNext.get(key))+"\r\n");
+				if(heur.sol.route_list.get(i).droneNext.get(key) != null && heur.sol.route_list.get(i).droneNext.get(heur.sol.route_list.get(i).droneNext.get(key)) != null)
+					out1.write(key+" "+heur.sol.route_list.get(i).droneNext.get(key)+" "+heur.sol.route_list.get(i).droneNext.get(heur.sol.route_list.get(i).droneNext.get(key))+"\r\n");
 		     		    }
 		}
 		out1.close();
