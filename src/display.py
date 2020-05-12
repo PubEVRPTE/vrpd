@@ -81,7 +81,7 @@ b = 1  # vpoi flag
 c = 0  # move flag
 pre = 0
 clock = pygame.time.Clock()
-vpoi = pos[vehicleRoute[0][1]]
+vpoi = pos[vehicleRoute[a][b]]
 start = pos[0]
 vstart = pos[0]
 dstart = pos[0]
@@ -96,8 +96,8 @@ while True:
         b += 1
         if b == len(vehicleRoute[a]):
             a += 1
-            b = 0
-            pre = vehicleRoute[a][b]
+            b = 1
+            pre = vehicleRoute[a][0]
         vpoi = pos[vehicleRoute[a][b]]
         start = pos[pre]
         vstart = pos[pre]
