@@ -218,6 +218,7 @@ public class Neighborhood {
 			Solution newSolution = new Solution(sol);
 			int id = random.nextInt(copyCus.size()-1) + 1;
 			poi current = copyCus.remove(id);
+			id = current.id;
 			Route route = newSolution.route_list.get(newSolution.belongTo.get(id));
 			if (current.pack_weight < inst.d_weight && route.droneNext.get(id) == null && route.dronePrev.get(id) == null) {
 				double threshold = newSolution.t_cost;
@@ -248,6 +249,7 @@ public class Neighborhood {
 			Solution newSolution = new Solution(sol);
 			int id = random.nextInt(copyCus.size()-1) + 1;
 			poi current = copyCus.remove(id);
+			id = current.id;
 			Route route = newSolution.route_list.get(newSolution.belongTo.get(id));
 			if (current.pack_weight < inst.d_weight && route.droneNext.get(id) == null && route.dronePrev.get(id) == null) {
 				double threshold = newSolution.t_cost;
